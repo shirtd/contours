@@ -1,0 +1,6 @@
+*.pyc
+*__pycache__
+*.tif
+*.DS_Store
+data/test
+figures
