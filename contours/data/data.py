@@ -4,8 +4,8 @@ import os, json
 
 
 class Data:
-    def __init__(self, name, folder, config=None):
-        self.name, self.folder = name, folder
+    def __init__(self, data, name, folder, config=None):
+        self.data, self.name, self.folder = data, name, folder
         self.config = {} if config is None else config
     def save_json(self, config=None):
         config = {**self.config, **({} if config is None else config)}
@@ -14,11 +14,13 @@ class Data:
         # print(f'saving {json_file}')
         with open(json_file, 'w') as f:
             json.dump(config, f, indent=2)
-    def save_data(self, data):
+    def save_data(self, data=None):
+        if data is None:
+            data = self.data
         file_name = os.path.join(self.folder, f'{self.name}.csv')
         print(f'saving {file_name}')
         np.savetxt(file_name, data)
-    def save(self, data, config=None):
+    def save(self, data=None, config=None):
         if not os.path.exists(self.folder):
             print(f' mkdir {self.folder}')
             os.makedirs(self.folder)
@@ -38,7 +40,7 @@ class DataFile(Data):
         self.path, self.file = file_name, os.path.basename(file_name)
         folder, name = (os.path.dirname(file_name), os.path.splitext(self.file)[0])
         self.json_file = f'{os.path.join(folder, name)}.json' if json_file is None else json_file
-        Data.__init__(self, name, folder, self.load_json())
+        Data.__init__(self, self.load_data(), name, folder, self.load_json())
     def load_data(self):
         print(f'loading {self.path}')
         return np.loadtxt(self.path)

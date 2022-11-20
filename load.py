@@ -12,7 +12,8 @@ if __name__ == '__main__':
     if args.gauss:
         name, folder = 'surf', os.path.join('data', 'surf')
         surf = GaussianScalarFieldData(name, folder, args.resolution, args.downsample, **GAUSS_ARGS)
-    surf = USGSScalarFieldData(args.file, args.cuts, args.colors, args.pad, args.downsample)
+    else:
+        surf = USGSScalarFieldData(args.file, args.cuts, args.colors, args.pad, args.downsample)
 
     if args.show:
         fig, ax = surf.init_plot()

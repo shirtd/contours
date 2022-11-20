@@ -1,5 +1,6 @@
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
+import numpy.linalg as la
 import dionysus as dio
 import numpy as np
 import os
@@ -16,9 +17,14 @@ from ..util import lmap, format_float, diff
 
 class Surface:
     def __init__(self, surface, grid, cuts, colors, pad=0):
+        self.surface, self.function, self.shape = surface, surface.flatten(), surface.shape
+        self.grid, self.grid_points = grid, np.vstack(lmap(lambda x: x.flatten(), grid)).T
         self.cuts, self.colors, self.pad = cuts, colors, pad
-        self.surface, self.grid, self.shape = surface, grid, surface.shape
-        self.grid_points = np.vstack(lmap(lambda x: x.flatten(), grid)).T
+        self.tree = KDTree(self.grid_points)
+    def __call__(self, i):
+        return self.function[i]
+    def __getitem__(self, i):
+        return self.grid_points[i]
     def get_data(self):
         return np.vstack([self.grid_points.T, self.surface.flatten()]).T
     def init_plot(self):
@@ -32,7 +38,7 @@ class Surface:
         def _filter(s):
             if s.dimension() == 0:
                 return s.data > self.cuts[0]
-            return min(self.function[i] for i in s) > self.cuts[0]
+            return min(self(i) for i in s) > self.cuts[0]
         if relative:
             rel = dio.Filtration([s for s in filt if s.data <= self.cuts[0]])
         else:
@@ -48,10 +54,20 @@ class Surface:
         if show: plt.show()
         plt.close(fig)
         return dgms
+    def _lips(self, i, j):
+        d = la.norm(self[i] - self[j])
+        if d:
+            return abs(self(i) - self(j)) / d
+        return 0
+    def local_lips(self, i, thresh):
+        return max(self._lips(i, j) for j in self.tree.query_ball_point(self[i], thresh))
     def greedy_sample(self, thresh, mult=1., config=None, noise=None):
         data = self.get_data()[self.function > self.cuts[0]]
-        points = data[greedysample(data[:,:2], thresh*mult/4)] # TODO perturb the sample
-        return SurfaceSampleData(points[:,:2], points[:,2], thresh, self, config)
+        sample_idx = greedysample(data[:,:2], thresh*mult/4)
+        constants = [self.local_lips(i, 2*thresh) for i in sample_idx]
+        # constants = np.ones(len(sample_idx))*self.lips
+        data = np.vstack([data[sample_idx].T, constants]).T # TODO perturb the sample
+        return SurfaceSampleData(data, thresh, self, config)
     def sample(self, thresh, sample=None, config=None):
         fig, ax = self.init_plot()
         surf_plt = self.plot(ax, **KWARGS['surf'])
@@ -65,8 +81,10 @@ class Surface:
             sample.plot_cover(ax, alpha=1, color='gray', zorder=2, radius=thresh)
             points = sample.get_data().tolist()
         def onclick(e):
-            p = data[tree.query(np.array([e.xdata, e.ydata]))[1]]
-            ax.add_patch(plt.Circle(p, thresh/2, color=COLOR['red1'], zorder=3, alpha=1))
+            l = tree.query(np.array([e.xdata, e.ydata]))[1]
+            # p = data[l].tolist() + [get_local_lips(self, l)]
+            p = data[l].tolist() + self.lips
+            ax.add_patch(plt.Circle(p[:2], thresh/2, color=COLOR['red1'], zorder=3, alpha=1))
             ax.scatter(p[0], p[1], c='black', zorder=4, s=5)
             plt.pause(0.01)
             points.append(p)
@@ -76,7 +94,7 @@ class Surface:
         plt.close(fig)
         if len(points):
             points = np.vstack(sorted(points, key=lambda x: x[2]))
-            return SurfaceSampleData(points[:,:2], points[:,2], thresh, self, config)
+            return SurfaceSampleData(points, thresh, self, config)
         return None
 
 
@@ -90,13 +108,8 @@ class GaussianSurface(Surface):
 class ScalarField(Surface):
     def __init__(self, surface, extents, cuts, colors, pad=0, lips=None):
         self.extents, self.lips = extents, lips
-        self.function = surface.flatten()
         grid = self.get_grid(extents, surface.shape)
         Surface.__init__(self, surface, grid, cuts, colors, pad)
-    def __call__(self, i):
-        return self.function[i]
-    def __getitem__(self, i):
-        return self.grid_points[i]
     def get_grid(self, extents, shape):
         return np.stack(np.meshgrid(np.linspace(*extents[0], shape[1]),
                                     np.linspace(*extents[1], shape[0])))
@@ -113,7 +126,7 @@ class USGSScalarFieldData(ScalarField, Data):
         extents = self.get_extents(file_name)
         config = {'extents' : extents, 'cuts' : cuts, 'colors' : colors, 'pad' : pad, 'lips' : lips}
         ScalarField.__init__(self, surface, **config)
-        Data.__init__(self, name, folder, config)
+        Data.__init__(self, surface, name, folder, config)
     def get_extents(self, file_name):
         with open(file_name, 'r') as f:
             cols, rows = (int(f.readline().split()[1]), int(f.readline().split()[1]))
@@ -132,7 +145,7 @@ class GaussianScalarFieldData(ScalarField, Data):
     def __init__(self, name, folder, resolution, downsample, cuts, colors, gauss_args, extents, pad=0, lips=None, scale=None):
         resolution0 = int(resolution * diff(extents[0]) / diff(extents[1]))
         grid = np.meshgrid(np.linspace(*extents[0], resolution0), np.linspace(*extents[1], resolution))
-        surface = mk_gauss(grid[0], grid[1], gauss_args)
+        surface = gaussian_field(grid[0], grid[1], gauss_args)
         if scale is not None:
             surface *= scale
             grid *= scale
@@ -144,11 +157,11 @@ class GaussianScalarFieldData(ScalarField, Data):
             name += str(downsample)
         config = {'extents' : extents, 'cuts' : cuts, 'colors' : colors, 'pad' : pad, 'lips' : lips}
         ScalarField.__init__(self, surface, **config)
-        Data.__init__(self, name, folder, config)
+        Data.__init__(self, surface, name, folder, config)
     def save(self, config=None):
         if self.lips is None:
-            self.config['lips'] = lipschitz_grid(self.surface, self.grid)
-        Data.save(self, self.surface.tolist())
+            self.config['lips'] = lipschitz_grid(self.surface, self.grid, self.cuts[0])
+        Data.save(self)
 
 class ScalarFieldFile(ScalarField, DataFile):
     def __init__(self, file_name, json_file=None):

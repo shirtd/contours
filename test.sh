@@ -2,15 +2,21 @@
 
 DIR='data'
 FOLDER='figures'
-RES=16
-THRESH=2000
 
-if [ -d "$DIR/test" ]; then
-  rm -r "$DIR/test"
+NAME='surf'
+RES=16
+SURF="$NAME$RES"
+
+THRESH1=200
+THRESH2=400
+
+
+if [ -d "$DIR/$NAME" ]; then
+  rm -r "$DIR/$NAME"
 fi
 
-if [ -d "$FOLDER/test" ]; then
-  rm -r "$FOLDER/test"
+if [ -d "$FOLDER/$SURF" ]; then
+  rm -r "$FOLDER/$SURF"
 fi
 
 STEP=0
@@ -20,9 +26,18 @@ RUN () {
   python $1
 }
 
-RUN "load.py $DIR/test.asc --save --downsample $RES"
-RUN "sample.py $DIR/test/test$RES.csv --save --barcode --contours --thresh 2000 --greedy --force"
+# RUN "load.py $DIR/test.asc --save --downsample $RES"
+RUN "load.py --save --gauss --downsample $RES"
 
-SAMPLE=$( echo "$DIR/test/samples/test$RES-sample"*"-${THRESH}.csv" )
+RUN "sample.py $DIR/$NAME/$SURF.csv --save --barcode --contours"
+RUN "sample.py $DIR/$NAME/$SURF.csv --save --thresh $THRESH1 --greedy --force"
+RUN "sample.py $DIR/$NAME/$SURF.csv --save --thresh $THRESH2 --greedy --force"
 
-RUN "main.py $SAMPLE --save --rips --contours --barcode"
+SAMPLE1=$( echo "$DIR/$NAME/samples/$SURF-sample"*"-${THRESH1}.csv" )
+SAMPLE2=$( echo "$DIR/$NAME/samples/$SURF-sample"*"-${THRESH2}.csv" )
+
+RUN "main.py $SAMPLE1 --save --rips --contours --barcode"
+RUN "main.py $SAMPLE2 --save --rips --contours --barcode"
+
+RUN "main.py $SAMPLE1 --sub-file $SAMPLE2 --save --lips --rips --contours --barcode"
+# RUN "main.py $SAMPLE1 --sub-file $SAMPLE2 --save --lips --rips --contours --barcode --local"

@@ -12,6 +12,8 @@ def get_tag(args, suffix=''):
     tag = f"{args.key}{'' if args.noim else '-im'}"
     if args.lips:
         tag = f"{tag}-lips{'-max' if args.nomin else '-min' if args.nomax else ''}"
+        if args.local:
+            tag += '-local'
     return f"{tag}{'-color' if args.color else ''}{suffix}"
 
 def set_args(args, sample):
@@ -53,7 +55,7 @@ if __name__ == '__main__':
         rips = RipsComplex(sample.points, radius, verbose=True)
         if args.lips:
             if args.sub_file is not None:
-                rips.lips_sub(subsample, sample.config['lips'])
+                rips.lips_sub(subsample, args.local)
             else:
                 rips.lips(sample, sample.config['lips'], invert_min=True)
         else:
@@ -62,13 +64,15 @@ if __name__ == '__main__':
     plot_args = [args.show, args.save, args.folder, args.color, args.dpi]
 
     if args.barcode:
+        if args.nosmooth:
+            tag += '-nosmooth'
         if args.lips:
             if args.sub_file is not None:
-                sample_dgms = sample.plot_lips_sub_barcode(rips, subsample, *plot_args, **KWARGS['barcode'])
+                sample_dgms = sample.plot_lips_sub_barcode(rips, subsample, *plot_args, smooth=not args.nosmooth, **KWARGS['barcode'])
             else:
-                sample_dgms = sample.plot_lips_barcode(rips, *plot_args, **KWARGS['barcode'])
+                sample_dgms = sample.plot_lips_barcode(rips, *plot_args, smooth=not args.nosmooth, **KWARGS['barcode'])
         else:
-            sample_dgms = sample.plot_barcode(rips, *plot_args, **KWARGS['barcode'])
+            sample_dgms = sample.plot_barcode(rips, *plot_args, smooth=not args.nosmooth, **KWARGS['barcode'])
 
     if args.contours:
         if args.cover or args.union:
@@ -79,10 +83,11 @@ if __name__ == '__main__':
         elif args.rips or args.graph:
             config = get_config(args)
             if args.lips:
-                if args.sub_file is not None:
-                    sample.plot_rips_filtration(rips, config, tag, *plot_args, subsample=subsample)
-                else:
+                if args.sub_file is None:
                     sample.plot_rips_filtration(rips, config, tag, *plot_args)
+                else:
+                    hide = {'min'} if args.nomin else {'max'} if args.nomax else {}
+                    sample.plot_rips_filtration(rips, config, tag, *plot_args, subsample=subsample, hide=hide)
             else:
                 sample.plot_rips_filtration(rips, config, tag, *plot_args)
     else:

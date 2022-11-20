@@ -1,11 +1,13 @@
 from itertools import combinations
 import numpy.linalg as la
 import dionysus as dio
+import numpy as np
 import diode
 
 from ..complex.complex import Complex, SimplicialComplex, DualComplex
 from ..util.geometry import circumcenter, circumradius
 from ..util.topology import in_bounds, to_path
+from ..util.grid import local_lips
 from ..util import stuple, tqit
 
 
@@ -76,10 +78,14 @@ class RipsComplex(SimplicialComplex, EmbeddedComplex):
         for s in self(2):
             s.data['max'] = max(self[e].data['max'] for e in combinations(s,2))
             s.data['min'] = (max if invert_min else min)(self[e].data['min'] for e in combinations(s,2))
-    def lips_sub(self, subsample, constant):
+    def lips_sub(self, subsample, local=False):
+        if local:
+            constants = subsample.constants
+        else:
+            constants = np.ones(len(subsample)) * subsample.config['lips']
         for p, s in zip(self.P, self(0)):
-            s.data['max'] = min(f + constant*la.norm(p - q) for q, f in zip(subsample, subsample.function))
-            s.data['min'] = max(f - constant*la.norm(p - q) for q, f in zip(subsample, subsample.function))
+            s.data['max'] = min(f + c*la.norm(p - q) for q, f, c in zip(subsample, subsample.function, constants))
+            s.data['min'] = max(f - c*la.norm(p - q) for q, f, c in zip(subsample, subsample.function, constants))
         for s in self(1)+self(2):
             s.data['max'] = max(self(0)[v].data['max'] for v in s)
             s.data['min'] = max(self(0)[v].data['min'] for v in s)

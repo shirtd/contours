@@ -40,6 +40,7 @@ parser.add_argument('--parent', default=None, help='sample parent (supersample)'
 
 parser.add_argument('--force', action='store_true', help='force save sample')
 parser.add_argument('--barcode', action='store_true')
+parser.add_argument('--nosmooth', action='store_true')
 parser.add_argument('--relative', action='store_true')
 parser.add_argument('--show', action='store_true')
 parser.add_argument('--save', action='store_true')
@@ -62,6 +63,7 @@ parser.add_argument('--thresh', type=float, default=THRESH, help='cover radius')
 parser.add_argument('--mult', type=float, default=MULT, help='radius mult (greedy param)')
 parser.add_argument('--coef', type=float, default=COEF, help='cover coef')
 parser.add_argument('--greedy', action='store_true', help='greedy sample')
+parser.add_argument('--local', action='store_true', help='local lips')
 
 parser.add_argument('--sample-file', default=None, help='sample file')
 parser.add_argument('--sub-file', default=None, help='sample file')

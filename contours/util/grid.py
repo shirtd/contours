@@ -8,11 +8,48 @@ import scipy
 import contours.util
 
 
-def lipschitz_grid(F, G):
+def index_to_grid(l, grid):
+    if isinstance(grid, int):
+        return [l//grid, l%grid]
+    return [l//grid.shape[1], l%grid.shape[1]]
+
+def grid_to_index(i, j, grid):
+    if isinstance(grid, int):
+        return i*grid + j
+    return i*grid.shape[0] + j
+
+def _lips(p, q):
+    d = la.norm(p[:2] - q[:2])
+    return abs(p[2] - q[2]) / d if d else 1
+
+def lipschitz_grid(F, G, min_cut=-np.inf):
     def c(i,j,a,b):
         return abs(F[i,j] - F[i+a,j+b]) / la.norm(G[:,i,j] - G[:,i+a,j+b])
     it = tqdm(list(product(range(1, F.shape[0]-1), range(1, F.shape[1]-1))), desc='lips')
-    return max(c(i,j,a,b) for i,j in it for a,b in permutations([-1,0,1],2))
+    return max(c(i,j,a,b) for i,j in it for a,b in permutations([-1,0,1],2) if F[i,j] > min_cut)
+
+def get_nbrs(E):
+    nbrs = {}
+    for a,b in E:
+        if not a in nbrs:
+            nbrs[a] = set()
+        if not b in nbrs:
+            nbrs[b] = set()
+        nbrs[a].add(b)
+        nbrs[b].add(a)
+    return nbrs
+
+def local_lips(P, E):
+    return [max(_lips(P[k], P[l]) for l in v) for k,v in get_nbrs(E).items()]
+
+# def get_local_lips(surface, l):
+#     data = surface.get_data()
+#     tree = KDTree(P[:2])
+#     nbrs = [tree.query_ball_point(p, thresh) for p in P]
+#     # i, j = index_to_grid(l, surface)
+#     # nbrs = [(i+a,j+b) for a,b in permutations([-1,0,1],2)]
+#     # nbrs = [grid_to_index(*t,surface) for t in nbrs if all(0 <= t[d] < surface.shape[d] for d in (0,1))]
+#     return max(_lips(data[l], data[k]) for k in nbrs)
 
 def get_grid(res=16, width=1, height=1):
     x_rng = np.linspace(-width,width,int(width*res))

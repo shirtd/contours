@@ -13,6 +13,9 @@ from ..util.geometry import coords_to_meters, greedysample
 from ..plot import get_sample, init_surface, plot_rips, plot_points, plot_balls, init_barcode, plot_barcode
 
 
+OOPS=4
+
+
 class Sample:
     def __init__(self, points, function, cuts, colors, pad, parent):
         self.points, self.function = points, function
@@ -45,9 +48,11 @@ class Sample:
         return p
 
 class MetricSample(Sample):
-    def __init__(self, points, function, radius, extents, cuts, colors, pad=0, lips=1., parent='test'):
+    def __init__(self, points, function, constants, radius, extents, cuts, colors, pad=0, lips=1., parent='test'):
         Sample.__init__(self, points, function, cuts, colors, pad, parent)
-        self.extents, self.radius = extents, radius
+        self.constants, self.extents, self.radius = constants, extents, radius
+    def get_data(self):
+        return np.vstack([Sample.get_data(self).T, self.constants]).T
     def plot_cover(self, ax, plot_colors=False, color=COLOR['red'], zorder=0, radius=None, **kwargs):
         balls = []
         radius = self.radius if radius is None else radius
@@ -75,26 +80,24 @@ class MetricSample(Sample):
                 kwargs['tri_colors'] = [self.colors[self.get_cut(self(t).max())] for t in rips(2)]
             else:
                 kwargs['tri_colors'] = [self.colors[self.get_cut(t.data[key])] for t in rips(2)]
-            # kwargs['tri_colors'] = [self.colors[self.get_cut(t.data['min'])] for t in rips(2)]
         else:
             kwargs['color'] = color
         return plot_rips(ax, rips, **kwargs)
 
 class SurfaceSampleData(MetricSample, Data):
-    def __init__(self, points, function, radius, surface, config=None):
+    def __init__(self, data, radius, surface, config=None):
         _config = {'radius' : radius, 'parent' : surface.name}
         config = {**surface.config, **_config, **({} if config is None else config)}
-        name = f'{surface.name}-sample{len(function)}-{format_float(radius)}'
-        Data.__init__(self, name, os.path.join(surface.folder, 'samples'), config=config)
-        MetricSample.__init__(self, points, function, **config)
+        name = f'{surface.name}-sample{len(data)}-{format_float(radius)}'
+        Data.__init__(self, data, name, os.path.join(surface.folder, 'samples'), config=config)
+        MetricSample.__init__(self, data[:,:2], data[:,2], data[:,3], **config)
 
 class MetricSampleFile(MetricSample, DataFile):
     def __init__(self, file_name, json_file=None, radius=None):
         DataFile.__init__(self, file_name, json_file)
-        data = self.load_data()
         # radius = float(self.name.split('_')[-1]) if radius is None else radius
         radius = self.config['radius'] if radius is None else radius
-        MetricSample.__init__(self, data[:,:2], data[:,2], **self.config)
+        MetricSample.__init__(self, self.data[:,:2], self.data[:,2], self.data[:,3], **self.config)
     def get_tag(self, args):
         return  f"sample{len(self)}_{format_float(self.radius)}"\
                 f"{'-cover' if args.cover else '-union' if args.union else ''}"\
@@ -103,19 +106,21 @@ class MetricSampleFile(MetricSample, DataFile):
     def init_plot(self):
         return init_surface(self.config['extents'], self.pad)
     def plot_rips_filtration(self, rips, config, tag=None, show=True, save=True,
-                            folder='figures', plot_colors=False, dpi=300, subsample=None):
+                            folder='figures', plot_colors=False, dpi=300, subsample=None, hide={}):
         fig, ax = self.init_plot()
-        if subsample is None:
+        if subsample is None and not 'sample' in hide:
             self.plot(ax, **KWARGS['sample'])
         else:
-            self.plot(ax, **KWARGS['supsample'])
-            subsample.plot(ax, plot_color=plot_colors, **KWARGS['subsample'])
+            if not 'sample' in hide:
+                self.plot(ax, **KWARGS['supsample'])
+            if not 'subsample' in hide:
+                subsample.plot(ax, plot_color=plot_colors, **KWARGS['subsample'])
             plot_colors = False
-        rips_plt = {k : self.plot_rips(ax, rips, plot_colors, **v) for k,v in config.items()}
+        rips_plt = {k : self.plot_rips(ax, rips, plot_colors, **v) for k,v in config.items() if not k in hide}
         for i, t in enumerate(self.get_levels()):
             for d in (1,2):
                 for s in rips(d):
-                    for k,v in rips_plt.items():
+                    for k, v in rips_plt.items():
                         if s.data[k] <= t:
                             v[d][s].set_visible(not config[k]['visible'])
             if show:
@@ -154,7 +159,7 @@ class MetricSampleFile(MetricSample, DataFile):
                 self.save_plot(folder, dpi, f"lips-{tag}{format_float(t)}")
         plt.close(fig)
          # [args.show, args.save, args.folder, args.color, args.dpi]
-    def plot_barcode(self, rips, show=False, save=False, folder='./', _color=None, dpi=300, sep='_', relative=False, **kwargs):
+    def plot_barcode(self, rips, show=False, save=False, folder='./', _color=None, dpi=300, smooth=True, sep='_', relative=False, **kwargs):
         fig, ax = init_barcode()
         # rips = RipsComplex(self.points, self.radius * 2 / np.sqrt(3), verbose=True)
         # rips.sublevels(self)
@@ -164,7 +169,9 @@ class MetricSampleFile(MetricSample, DataFile):
         else:
             pivot = Filtration(rips, 'f')
         hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
-        smoothing = None # lambda p: [p[0]+self.config['lips']*self.radius, p[1]-self.config['lips']*self.radius]
+        smoothing = None
+        if smooth:
+            smoothing = lambda p: [p[0]+self.config['lips']*self.radius/OOPS, p[1]-self.config['lips']*self.radius/OOPS]
         dgms = hom.get_diagram(rips, filt, pivot, smoothing)
         barode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
         tag = f"barcode{'-relative' if relative else ''}"
@@ -172,7 +179,7 @@ class MetricSampleFile(MetricSample, DataFile):
         if show: plt.show()
         plt.close(fig)
         return dgms
-    def plot_lips_barcode(self, rips, show=False, save=False, folder='./', _color=None, dpi=300, sep='_', relative=False, **kwargs):
+    def plot_lips_barcode(self, rips, show=False, save=False, folder='./', _color=None, dpi=300, smooth=True, sep='_', relative=False, **kwargs):
         fig, ax = init_barcode()
         # rips = RipsComplex(self.points, self.radius * 2 / np.sqrt(3), verbose=True)
         # rips.sublevels(self)
@@ -183,7 +190,9 @@ class MetricSampleFile(MetricSample, DataFile):
         else:
             pivot = Filtration(rips, 'max')
         hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
-        smoothing = None # lambda p: [p[0]+self.config['lips']*self.radius, p[1]-self.config['lips']*self.radius]
+        smoothing = None
+        if smooth:
+            smoothing = lambda p: [p[0]+self.config['lips']*self.radius/OOPS, p[1]-self.config['lips']*self.radius/OOPS]
         dgms = hom.get_diagram(rips, filt, pivot, smoothing)
         barode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
         tag = f"barcode{'-relative' if relative else ''}-lips"
@@ -191,7 +200,7 @@ class MetricSampleFile(MetricSample, DataFile):
         if show: plt.show()
         plt.close(fig)
         return dgms
-    def plot_lips_sub_barcode(self, rips, subsample, show=False, save=False, folder='./', _color=None, dpi=300, sep='_', relative=False, **kwargs):
+    def plot_lips_sub_barcode(self, rips, subsample, show=False, save=False, folder='./', _color=None, dpi=300, smooth=True,  sep='_', relative=False, **kwargs):
         fig, ax = init_barcode()
         # rips = RipsComplex(self.points, self.radius * 2 / np.sqrt(3), verbose=True)
         # rips.lips_sub(subsample, self.config['lips'])
@@ -202,6 +211,8 @@ class MetricSampleFile(MetricSample, DataFile):
             pivot = Filtration(rips, 'max')
         hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
         smoothing = None # lambda p: [p[0]+self.config['lips']*self.radius, p[1]-self.config['lips']*self.radius]
+        if smooth:
+            smoothing = lambda p: [p[0]+self.config['lips']*self.radius/OOPS, p[1]-self.config['lips']*self.radius/OOPS]
         dgms = hom.get_diagram(rips, filt, pivot, smoothing)
         barode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
         tag = f"barcode{'-relative' if relative else ''}-lips-sub{len(subsample)}"
