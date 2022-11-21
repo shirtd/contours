@@ -26,18 +26,15 @@ RUN () {
   python $1
 }
 
-# RUN "load.py $DIR/test.asc --save --downsample $RES"
-RUN "load.py --save --gauss --downsample $RES"
-
-RUN "sample.py $DIR/$NAME/$SURF.csv --save --barcode --contours"
-RUN "sample.py $DIR/$NAME/$SURF.csv --save --thresh $THRESH1 --greedy --force"
-RUN "sample.py $DIR/$NAME/$SURF.csv --save --thresh $THRESH2 --greedy --force"
-
+# SAMPLE 1
+RUN "load.py --write --save --gauss --downsample $RES --barcode --contours --thresh $THRESH1 --greedy"
 SAMPLE1=$( echo "$DIR/$NAME/samples/$SURF-sample"*"-${THRESH1}.csv" )
-SAMPLE2=$( echo "$DIR/$NAME/samples/$SURF-sample"*"-${THRESH2}.csv" )
-
 RUN "main.py $SAMPLE1 --save --rips --contours --barcode"
+
+# SAMPLE 2
+RUN "load.py $DIR/$NAME/$SURF.csv --write --save --thresh $THRESH2 --greedy"
+SAMPLE2=$( echo "$DIR/$NAME/samples/$SURF-sample"*"-${THRESH2}.csv" )
 RUN "main.py $SAMPLE2 --save --rips --contours --barcode"
 
+# LIPS SUBSAMPLE
 RUN "main.py $SAMPLE1 --sub-file $SAMPLE2 --save --lips --rips --contours --barcode"
-# RUN "main.py $SAMPLE1 --sub-file $SAMPLE2 --save --lips --rips --contours --barcode --local"

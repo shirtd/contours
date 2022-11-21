@@ -53,6 +53,13 @@ class MetricSample(Sample):
         self.constants, self.extents, self.radius = constants, extents, radius
     def get_data(self):
         return np.vstack([Sample.get_data(self).T, self.constants]).T
+    def init_plot(self):
+        return init_surface(self.extents, self.pad)
+    def get_tag(self, args):
+        return  f"sample{len(self)}_{format_float(self.radius)}"\
+                f"{'-cover' if args.cover else '-union' if args.union else ''}"\
+                f"{'-color' if args.color else ''}"\
+                f"{'-surf' if args.surf else ''}"
     def plot_cover(self, ax, plot_colors=False, color=COLOR['red'], zorder=0, radius=None, **kwargs):
         balls = []
         radius = self.radius if radius is None else radius
@@ -84,27 +91,12 @@ class MetricSample(Sample):
             kwargs['color'] = color
         return plot_rips(ax, rips, **kwargs)
 
-class SurfaceSampleData(MetricSample, Data):
-    def __init__(self, data, radius, surface, config=None):
-        _config = {'radius' : radius, 'parent' : surface.name}
-        config = {**surface.config, **_config, **({} if config is None else config)}
-        name = f'{surface.name}-sample{len(data)}-{format_float(radius)}'
-        Data.__init__(self, data, name, os.path.join(surface.folder, 'samples'), config=config)
+class MetricSampleData(MetricSample, Data):
+    def __init__(self, data, radius, parent, folder, config):
+        config['radius'], config['parent'] = radius, parent
+        name = f'{parent}-sample{len(data)}-{format_float(radius)}'
+        Data.__init__(self, data, name, os.path.join(folder, 'samples'), config=config)
         MetricSample.__init__(self, data[:,:2], data[:,2], data[:,3], **config)
-
-class MetricSampleFile(MetricSample, DataFile):
-    def __init__(self, file_name, json_file=None, radius=None):
-        DataFile.__init__(self, file_name, json_file)
-        # radius = float(self.name.split('_')[-1]) if radius is None else radius
-        radius = self.config['radius'] if radius is None else radius
-        MetricSample.__init__(self, self.data[:,:2], self.data[:,2], self.data[:,3], **self.config)
-    def get_tag(self, args):
-        return  f"sample{len(self)}_{format_float(self.radius)}"\
-                f"{'-cover' if args.cover else '-union' if args.union else ''}"\
-                f"{'-color' if args.color else ''}"\
-                f"{'-surf' if args.surf else ''}"
-    def init_plot(self):
-        return init_surface(self.config['extents'], self.pad)
     def plot_rips_filtration(self, rips, config, tag=None, show=True, save=True,
                             folder='figures', plot_colors=False, dpi=300, subsample=None, hide={}):
         fig, ax = self.init_plot()
@@ -158,11 +150,8 @@ class MetricSampleFile(MetricSample, DataFile):
             if save:
                 self.save_plot(folder, dpi, f"lips-{tag}{format_float(t)}")
         plt.close(fig)
-         # [args.show, args.save, args.folder, args.color, args.dpi]
     def plot_barcode(self, rips, show=False, save=False, folder='./', _color=None, dpi=300, smooth=True, sep='_', relative=False, **kwargs):
         fig, ax = init_barcode()
-        # rips = RipsComplex(self.points, self.radius * 2 / np.sqrt(3), verbose=True)
-        # rips.sublevels(self)
         filt = Filtration(rips, 'f')
         if rips.thresh > self.radius:
             pivot = Filtration(rips, 'f', filter=lambda s: s['dist'] <= self.radius)
@@ -181,9 +170,6 @@ class MetricSampleFile(MetricSample, DataFile):
         return dgms
     def plot_lips_barcode(self, rips, show=False, save=False, folder='./', _color=None, dpi=300, smooth=True, sep='_', relative=False, **kwargs):
         fig, ax = init_barcode()
-        # rips = RipsComplex(self.points, self.radius * 2 / np.sqrt(3), verbose=True)
-        # rips.sublevels(self)
-        # rips.lips(self, self.config['lips'], True)
         filt = Filtration(rips, 'min')
         if rips.thresh > self.radius:
             pivot = Filtration(rips, 'max', filter=lambda s: s['dist'] <= self.radius)
@@ -202,15 +188,13 @@ class MetricSampleFile(MetricSample, DataFile):
         return dgms
     def plot_lips_sub_barcode(self, rips, subsample, show=False, save=False, folder='./', _color=None, dpi=300, smooth=True,  sep='_', relative=False, **kwargs):
         fig, ax = init_barcode()
-        # rips = RipsComplex(self.points, self.radius * 2 / np.sqrt(3), verbose=True)
-        # rips.lips_sub(subsample, self.config['lips'])
         filt = Filtration(rips, 'min')
         if rips.thresh > self.radius:
             pivot = Filtration(rips, 'max', filter=lambda s: s['dist'] <= self.radius)
         else:
             pivot = Filtration(rips, 'max')
         hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
-        smoothing = None # lambda p: [p[0]+self.config['lips']*self.radius, p[1]-self.config['lips']*self.radius]
+        smoothing = None
         if smooth:
             smoothing = lambda p: [p[0]+self.config['lips']*self.radius/OOPS, p[1]-self.config['lips']*self.radius/OOPS]
         dgms = hom.get_diagram(rips, filt, pivot, smoothing)
@@ -220,3 +204,13 @@ class MetricSampleFile(MetricSample, DataFile):
         if show: plt.show()
         plt.close(fig)
         return dgms
+
+class MetricSampleFile(MetricSampleData, DataFile):
+    def __init__(self, file_name, json_file=None, radius=None):
+        if json_file is None:
+            json_file = f'{os.path.splitext(file_name)[0]}.json'
+        DataFile.__init__(self, file_name, json_file)
+        data, config = self.load_data(), self.load_json()
+        radius = config['radius'] if radius is None else radius
+        parent, folder = config['parent'], os.path.dirname(file_name)
+        MetricSampleData.__init__(self, data, radius, parent, folder, config)

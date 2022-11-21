@@ -6,19 +6,20 @@ import os, sys
 from contours.config import COLOR, KWARGS, parser
 from contours.surface import ScalarFieldFile, MetricSampleFile
 
+# DEPRECATED by load.py
 
 if __name__ == '__main__':
     args = parser.parse_args()
 
     surf = ScalarFieldFile(args.file, args.json)
     args.folder = os.path.join(args.folder, surf.name, 'surf')
-
+    plot_args = [args.show, args.save, args.folder, args.dpi]
 
     if args.barcode:
-        surf_dgms = surf.plot_barcode(args.folder, args.save, args.show, args.dpi, **KWARGS['barcode'])
+        surf_dgms = surf.plot_barcode(*plot_args, **KWARGS['barcode'])
 
     if args.contours:
-        surf.plot_contours(args.show, args.save, args.folder, args.dpi)
+        surf.plot_contours(*plot_args)
 
     sample = None
     if args.greedy:

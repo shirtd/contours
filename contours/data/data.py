@@ -35,12 +35,10 @@ class Data:
         print(f' - saving {file_name}')
         plt.savefig(file_name, dpi=dpi, transparent=True)
 
-class DataFile(Data):
+class DataFile:
     def __init__(self, file_name, json_file=None):
         self.path, self.file = file_name, os.path.basename(file_name)
-        folder, name = (os.path.dirname(file_name), os.path.splitext(self.file)[0])
         self.json_file = f'{os.path.join(folder, name)}.json' if json_file is None else json_file
-        Data.__init__(self, self.load_data(), name, folder, self.load_json())
     def load_data(self):
         print(f'loading {self.path}')
         return np.loadtxt(self.path)

@@ -21,10 +21,10 @@ def set_args(args, sample):
     if args.key is None:
         args.key = ( 'graph' if args.graph else 'rips' if args.rips
                 else 'union' if args.union else 'cover' )
-    args.folder = os.path.join(args.folder, sample.parent)
+    args.folder = os.path.join(args.folder, sample.parent, sample.name)
     if args.lips:
         args.folder = os.path.join(args.folder, 'lips')
-    args.folder = os.path.join(args.folder, args.key, sample.name)
+    args.folder = os.path.join(args.folder, args.key)
     return get_tag(args)
 
 def get_config(args):
