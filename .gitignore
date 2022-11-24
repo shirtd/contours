@@ -4,3 +4,5 @@
 *.DS_Store
 data/test
 figures
+
+data/rainier_sub.asc
