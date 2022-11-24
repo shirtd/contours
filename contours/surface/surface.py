@@ -21,6 +21,8 @@ class Surface:
         self.grid, self.grid_points = grid, np.vstack(lmap(lambda x: x.flatten(), grid)).T
         self.cuts, self.colors, self.pad = cuts, colors, pad
         self.tree = KDTree(self.grid_points)
+    def __len__(self):
+        return len(self.function)
     def __call__(self, i):
         return self.function[i]
     def __getitem__(self, i):
@@ -61,9 +63,12 @@ class Surface:
         return 0
     def local_lips(self, i, thresh):
         return max(self._lips(i, j) for j in self.tree.query_ball_point(self[i], thresh))
-    def greedy_sample(self, thresh, mult=1., config=None, noise=None):
+    def greedy_sample(self, thresh, mult=1., seed=None, config=None, noise=None):
         data = self.get_data()[self.function > self.cuts[0]]
-        sample_idx = greedysample(data[:,:2], thresh*mult/4)
+        if seed is None:
+            seed = np.random.randint(len(data))
+            print(f'SEED: {seed}')
+        sample_idx = greedysample(data[:,:2], thresh*mult/4, seed)
         constants = [self.local_lips(i, 2*thresh) for i in sample_idx]
         # constants = np.ones(len(sample_idx))*self.lips
         data = np.vstack([data[sample_idx].T, constants]).T # TODO perturb the sample
@@ -83,7 +88,7 @@ class Surface:
         def onclick(e):
             l = tree.query(np.array([e.xdata, e.ydata]))[1]
             # p = data[l].tolist() + [get_local_lips(self, l)]
-            p = data[l].tolist() + self.lips
+            p = data[l].tolist() + [self.lips]
             ax.add_patch(plt.Circle(p[:2], thresh/2, color=COLOR['red1'], zorder=3, alpha=1))
             ax.scatter(p[0], p[1], c='black', zorder=4, s=5)
             plt.pause(0.01)

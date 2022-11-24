@@ -1,6 +1,7 @@
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
 import numpy.linalg as la
+from tqdm import tqdm
 import numpy as np
 import os
 
@@ -143,7 +144,7 @@ def plot_balls(ax, P, F, alpha=0.2, color=None, colors=None, zorder=None, zorder
 def plot_poly(ax, P, T, visible=True, color=None, color_list=None, **kwargs):
     if color_list is None:
         color_list = [color for _ in T]
-    tp = {t : plt.Polygon(P[t,:], facecolor=c, edgecolor='none', **kwargs) for c,t in zip(color_list,T)}
+    tp = {t : plt.Polygon(P[t,:], facecolor=c, edgecolor='none', **kwargs) for c,t in tqdm(list(zip(color_list,T)),desc='plot poly')}
     lmap(lambda t: ax.add_patch(t), tp.values())
     if not visible:
         for t,p in tp.items():
@@ -153,7 +154,7 @@ def plot_poly(ax, P, T, visible=True, color=None, color_list=None, **kwargs):
 def plot_edges(ax, P, E, visible=True, color=None, color_list=None, **kwargs):
     if color_list is None:
         color_list = [color for _ in E]
-    ep = {e : ax.plot(P[e,0], P[e,1], color=c, **kwargs)[0] for c,e in zip(color_list,E)}
+    ep = {e : ax.plot(P[e,0], P[e,1], color=c, **kwargs)[0] for c,e in tqdm(list(zip(color_list,E)),desc='plot edges')}
     if not visible:
         for e,p in ep.items():
             p.set_visible(False)

@@ -26,7 +26,8 @@ FDIR='figures'
 DPI=300
 PAD=1e2
 LIPS=None
-THRESH=None#PAD
+THRESH=None # PAD
+ALPHA=None # 2e8 # None # 2e4
 
 # PARSE
 parser = argparse.ArgumentParser(prog='lipser')
@@ -34,9 +35,10 @@ parser = argparse.ArgumentParser(prog='lipser')
 parser.add_argument('file', nargs='?', help='surface file')
 parser.add_argument('--gauss', action='store_true', help='generate gaussian surface')
 parser.add_argument('--downsample', default=None, type=int, help='downsample')
-parser.add_argument('--resolution', default=1024, type=int, help='downsample')
+parser.add_argument('--resolution', default=1024, type=int, help='resolution')
 parser.add_argument('--key', '-k', default=None, type=str, help='program key')
 parser.add_argument('--parent', default=None, help='sample parent (supersample)')
+parser.add_argument('--seed', default=None, type=int, help='sample seed')
 
 parser.add_argument('--force', action='store_true', help='force save sample')
 parser.add_argument('--barcode', action='store_true')
@@ -77,7 +79,10 @@ parser.add_argument('--cover', action='store_true', help='plot cover')
 parser.add_argument('--color', action='store_true', help='plot color')
 parser.add_argument('--union', action='store_true', help='plot union')
 parser.add_argument('--surf', action='store_true', help='plot surf')
-parser.add_argument('--rips', action='store_true', help='plot surf')
+parser.add_argument('--rips', action='store_true', help='do rips')
+parser.add_argument('--alpha', default=ALPHA, type=float, help='convexity constant (for delaunay)')
+parser.add_argument('--delaunay', action='store_true', help='do delaunay')
+parser.add_argument('--voronoi', action='store_true', help='do voronoi')
 parser.add_argument('--graph', action='store_true', help='plot surf')
 parser.add_argument('--lips', action='store_true', help='plot lips')
 parser.add_argument('--nomin', action='store_true', help='max only')

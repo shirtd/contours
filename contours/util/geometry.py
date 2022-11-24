@@ -7,20 +7,18 @@ import numpy as np
 from contours.util.grid import ripple
 
 
-def greedy(P, distance='euclidean'):
+def greedy(P, seed=0, distance='euclidean'):
     S = cdist(P, P, distance)
-    D = S[0]
-    j = 0
+    j, D = seed, S[seed]
     for _ in P:
         yield j
         j = D.argmax()
         D = np.minimum(S[j], D)
 
 
-def greedysample(P, delta, distance='euclidean'):
+def greedysample(P, delta, seed=0, distance='euclidean'):
     S = cdist(P, P, distance)
-    D = S[0]
-    j = 0
+    j, D = seed, S[seed]
     output = []
     for _ in P:
         output.append(j)

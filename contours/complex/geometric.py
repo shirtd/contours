@@ -22,17 +22,20 @@ class EmbeddedComplex(Complex):
         pass
 
 class DelaunayComplex(SimplicialComplex, EmbeddedComplex):
-    def __init__(self, P, verbose=False, desc='delaunay'):
+    def __init__(self, P, thresh=None, filter=None, verbose=False, desc='delaunay'):
+        self.thresh = thresh
         EmbeddedComplex.__init__(self, P)
         for s,f in tqit(diode.fill_alpha_shapes(P, True), verbose, desc):
-            s = stuple(s)
-            faces = set(self.face_it(s))
-            self.add_new(s, faces, alpha=f)
+            if filter is None or filter(f):
+                s = stuple(s)
+                faces = set(self.face_it(s))
+                self.add_new(s, faces, alpha=f)
     def in_bounds(self, s, bounds):
         return in_bounds(circumcenter(self.P[s]), bounds)
 
 class VoronoiComplex(DualComplex, EmbeddedComplex):
     def __init__(self, K, B=set(), verbose=False):
+        self.thresh = K.thresh
         P = circumcenter(K.P[K(K.dim)])
         EmbeddedComplex.__init__(self, P)
         DualComplex.__init__(self, K, B, verbose)
@@ -58,34 +61,3 @@ class RipsComplex(SimplicialComplex, EmbeddedComplex):
         return True
     def to_dict(self):
         return {d : self(d) for d in range(3)}
-    def sublevels(self, sample, key='f', verbose=False):
-        for s in tqit(self, verbose, 'sub'):
-            s.data[key] = sample(s).max()
-    def superlevels(self, sample, key='f', verbose=False):
-        for s in tqit(self, verbose, 'sup'):
-            s.data[key] = sample(s).min()
-    def lips(self, sample, constant, invert_min=False):
-        for s in self(0):
-            s.data['max'] = s.data['min'] = sample(s[0])
-        for s in self(1):# + self(2):
-            s.data['max'] = max(sample(v) for v in s) + constant * s.data['dist'] / 2
-            s.data['min'] = min(sample(v) for v in s) - constant * s.data['dist'] / 2
-        # for s in self(1):
-        #     sf = sample(s[0]) + sample(s[1])
-        #     sd = constant * s.data['dist']
-        #     s.data['max'] = (sf + sd) / 2
-        #     s.data['min'] = (sf - sd) / 2
-        for s in self(2):
-            s.data['max'] = max(self[e].data['max'] for e in combinations(s,2))
-            s.data['min'] = (max if invert_min else min)(self[e].data['min'] for e in combinations(s,2))
-    def lips_sub(self, subsample, local=False):
-        if local:
-            constants = subsample.constants
-        else:
-            constants = np.ones(len(subsample)) * subsample.config['lips']
-        for p, s in zip(self.P, self(0)):
-            s.data['max'] = min(f + c*la.norm(p - q) for q, f, c in zip(subsample, subsample.function, constants))
-            s.data['min'] = max(f - c*la.norm(p - q) for q, f, c in zip(subsample, subsample.function, constants))
-        for s in self(1)+self(2):
-            s.data['max'] = max(self(0)[v].data['max'] for v in s)
-            s.data['min'] = max(self(0)[v].data['min'] for v in s)

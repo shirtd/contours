@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     sample = None
     if args.greedy:
-        sample = surf.greedy_sample(args.thresh, args.mult)
+        sample = surf.greedy_sample(args.thresh, args.mult, args.seed)
     elif args.sample_file is not None:
         sample = MetricSampleFile(args.sample_file)
 

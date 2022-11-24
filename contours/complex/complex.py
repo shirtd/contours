@@ -1,4 +1,7 @@
-from contours.util import stuple
+import numpy as np
+import numpy.linalg as la
+
+from ..util import stuple, tqit
 
 
 class Element:
@@ -53,10 +56,15 @@ class Complex:
         for f in faces:
             fk = hash(f)
             self.__faces[k].add(fk)
-            self.__cofaces[fk].add(k)
+            # TODO !!
+            if fk in self.__cofaces:
+                self.__cofaces[fk].add(k)
+            # self.__cofaces[fk].add(k)
         return cell
     def faces(self, c):
-        return [self.__map[f] for f in self.__faces[hash(c)]]
+        # TODO !!
+        return [self.__map[f] for f in self.__faces[hash(c)] if hash(c) in self.__faces and f in self.__map]
+        # return [self.__map[f] for f in self.__faces[hash(c)]]
     def cofaces(self, c):
         return [self.__map[f] for f in self.__cofaces[hash(c)]]
     def items(self):
@@ -86,6 +94,23 @@ class Complex:
         return {s}.union({f for t in self.faces(s) for f in self.closure(t)})
     def __repr__(self):
         return ''.join(['%d:\t%d elements\n' % (d, len(self(d))) for d in range(self.dim+1)])
+    def sublevels(self, sample, key='f', verbose=False):
+        for s in tqit(self, verbose, 'sub'):
+            s.data[key] = sample(s).max()
+    def superlevels(self, sample, key='f', verbose=False):
+        for s in tqit(self, verbose, 'sup'):
+            s.data[key] = sample(s).min()
+    def lips_sub(self, subsample, local=False):
+        if local:
+            constants = subsample.constants
+        else:
+            constants = np.ones(len(subsample)) * subsample.config['lips']
+        for p, s in zip(self.P, self(0)):
+            s.data['max'] = min(f + c*la.norm(p - q) for q, f, c in zip(subsample, subsample.function, constants))
+            s.data['min'] = max(f - c*la.norm(p - q) for q, f, c in zip(subsample, subsample.function, constants))
+        for s in self(1)+self(2):
+            s.data['max'] = max(self(0)[v].data['max'] for v in s)
+            s.data['min'] = max(self(0)[v].data['min'] for v in s)
 
 class CellComplex(Complex):
     def add_new(self, c, dim, faces, **data):
@@ -99,6 +124,16 @@ class SimplicialComplex(Complex):
                 yield s[:i]+s[i+1:]
     def add_new(self, s, faces, **data):
         return self.add(Simplex(s, **data), faces)
+    def lips(self, sample, constant, invert_min=False):
+        for s in self(0):
+            s.data['max'] = s.data['min'] = sample(s[0])
+        for s in self(1):
+            d = la.norm(sample[s[0]] - sample[s[1]])
+            s.data['max'] = max(sample(v) for v in s) + constant * d / 2
+            s.data['min'] = min(sample(v) for v in s) - constant * d / 2
+        for s in self(2):
+            s.data['max'] = max(self[e].data['max'] for e in combinations(s,2))
+            s.data['min'] = (max if invert_min else min)(self[e].data['min'] for e in combinations(s,2))
 
 class DualComplex(CellComplex):
     def __init__(self, K, B, verbose=False, desc='[ voronoi'):
