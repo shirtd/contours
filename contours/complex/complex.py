@@ -15,7 +15,9 @@ class Element:
     def __index__(self):
         return list(self.__atoms)
     def __getitem__(self, i):
-        return self.__atoms[i]
+        if i < len(self):
+            return self.__atoms[i]
+        # print(f" ! atom index {i} out of range({len(self)})")
     def __call__(self, key):
         if key in self.data:
             return self.data[key]
@@ -47,7 +49,7 @@ class Complex:
         self.__map, self.__faces, self.__cofaces = {}, {}, {}
     def add(self, cell, faces):
         k = hash(cell)
-        if k in self:
+        if k in self.__map:
             return cell
         self.__elements[cell.dim].append(cell)
         self.__map[k] = cell
@@ -56,15 +58,10 @@ class Complex:
         for f in faces:
             fk = hash(f)
             self.__faces[k].add(fk)
-            # TODO !!
-            if fk in self.__cofaces:
-                self.__cofaces[fk].add(k)
-            # self.__cofaces[fk].add(k)
+            self.__cofaces[fk].add(k)
         return cell
     def faces(self, c):
-        # TODO !!
-        return [self.__map[f] for f in self.__faces[hash(c)] if hash(c) in self.__faces and f in self.__map]
-        # return [self.__map[f] for f in self.__faces[hash(c)]]
+        return [self.__map[f] for f in self.__faces[hash(c)]]
     def cofaces(self, c):
         return [self.__map[f] for f in self.__cofaces[hash(c)]]
     def items(self):
@@ -95,8 +92,12 @@ class Complex:
     def __repr__(self):
         return ''.join(['%d:\t%d elements\n' % (d, len(self(d))) for d in range(self.dim+1)])
     def sublevels(self, sample, key='f', verbose=False):
-        for s in tqit(self, verbose, 'sub'):
-            s.data[key] = sample(s).max()
+        try:
+            for s in tqit(self, verbose, 'sub'):
+                s.data[key] = sample(s).max()
+        except IndexError as e:
+            print(s,tuple(s), s.key())
+            raise(e)
     def superlevels(self, sample, key='f', verbose=False):
         for s in tqit(self, verbose, 'sup'):
             s.data[key] = sample(s).min()

@@ -50,12 +50,12 @@ if __name__ == '__main__':
         subsample = MetricSampleFile(args.sub_file)
         tag = f'{tag}-{len(subsample)}subsample'
     if args.rips or args.graph or args.delaunay or args.voronoi or args.barcode:
-        if args.delaunay:
+        if args.delaunay or args.voronoi:
             filter=None # $if args.alpha is None else (lambda f: f < args.alpha)
             complex = DelaunayComplex(sample.points, sample.radius, verbose=True)
             # print(args.alpha, sum(s.data['alpha'] for s in complex(1))/len(complex(1)))
-        elif args.voronoi:
-            complex = VoronoiComplex(sample.points, sample.radius, verbose=True)
+            if args.voronoi:
+                complex = VoronoiComplex(complex, complex.get_boundary(sample.extents), verbose=True)
         else:
             radius = sample.radius
             if not args.noim:
@@ -68,7 +68,7 @@ if __name__ == '__main__':
                 complex.lips(sample, sample.config['lips'], invert_min=True)
             else:
                 print("! can't do lips on voronoi")
-        else:
+        elif not args.voronoi:
             complex.sublevels(sample)
 
     plot_args = [args.show, args.save, args.folder, args.color, args.dpi]
@@ -115,6 +115,15 @@ if __name__ == '__main__':
             cover_plt = sample.plot_cover(ax, args.color, **KWARGS[args.key])
         elif args.rips or args.graph or args.delaunay:
             rips_plt = sample.plot_rips(ax, complex, args.color, **KWARGS[args.key])
+        # elif args.voronoi:
+        #     # TODO
+        #     print('todo: voronoi viz')
+        #     # voronoi_plt = sample.plot_voronoi(ax, complex, args.color)
+        #     E = np.array([[complex.P[v] for v in e] for e in complex(1) if len(e) == 2])
+        #     for u,v in E:
+        #         ax.plot(u,v, color='black')
+        #     # ax.plot(E[:,0], E[:,1])
+
 
         if args.save:
             sample.save_plot(args.folder, args.dpi, tag)

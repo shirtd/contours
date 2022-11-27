@@ -13,7 +13,7 @@ from ..util.geometry import coords_to_meters, greedysample
 from ..plot import get_sample, init_surface, plot_rips, plot_points, plot_balls, init_barcode, plot_barcode
 
 
-OOPS=4
+OOPS=1
 
 
 class Sample:
@@ -34,12 +34,15 @@ class Sample:
     def __getitem__(self, i):
         return self.points[i]
     def __call__(self, i):
+        # if i < len(self):
         return self.function[i]
+        # print(f"index {i} out of range({len(self)})")
+        # return self.function.min()
     def __iter__(self):
         for p in self.points:
             yield p
     def __len__(self):
-        return len(self.points)
+        return len(self.function)
     def plot(self, ax, visible=True, plot_color=False, **kwargs):
         if plot_color:
             kwargs['color'] = [self.colors[self.get_cut(f)] for f in self.function]
@@ -67,7 +70,7 @@ class MetricSample(Sample):
         for p,f in zip(self.points, self.function):
             cut = self.get_cut(f)
             c = self.colors[cut] if plot_colors else color
-            s = plt.Circle(p, radius / 2, facecolor=c, zorder=zorder+cut, **kwargs)
+            s = plt.Circle(p, radius, facecolor=c, zorder=zorder+cut, **kwargs)
             balls.append(s)
             ax.add_patch(s)
         return balls
@@ -77,7 +80,7 @@ class MetricSample(Sample):
         for p,f,r in zip(self.points, self.function, radii):
             cut = self.get_cut(f)
             c = self.colors[cut] if plot_colors else color
-            s = plt.Circle(p, r / 2, facecolor=c, zorder=zorder+cut, **kwargs)
+            s = plt.Circle(p, r, facecolor=c, zorder=zorder+cut, **kwargs)
             balls.append(s)
             ax.add_patch(s)
         return balls
@@ -90,6 +93,9 @@ class MetricSample(Sample):
         else:
             kwargs['color'] = color
         return plot_rips(ax, rips, **kwargs)
+    def plot_voronoi(self, ax, complex, plot_colors=False):
+        return {e : ax.plot(complex.P[e[0],0], complex.P[e[1],1]) for e in complex(1)}
+
 
 class MetricSampleData(MetricSample, Data):
     def __init__(self, data, radius, parent, folder, config):
@@ -138,8 +144,8 @@ class MetricSampleData(MetricSample, Data):
                             folder='figures', plot_colors=False, dpi=300, **kwargs):
         fig, ax = self.init_plot()
         self.plot(ax, **KWARGS['sample'])
-        offset_plt = {  'max' : self.plot_balls(ax, 2*self.function/self.config['lips'], plot_colors, **config['max']),
-                        'min' : self.plot_balls(ax, 2*self.function/self.config['lips'], plot_colors, **config['min'])}
+        offset_plt = {  'max' : self.plot_balls(ax, self.function/self.config['lips'], plot_colors, **config['max']),
+                        'min' : self.plot_balls(ax, self.function/self.config['lips'], plot_colors, **config['min'])}
         for i, t in enumerate(self.get_levels()):
             for j,f in enumerate(self.function):
                 fs = {'max' : (t - f) / self.config['lips'], 'min' : (f - t) / self.config['lips']}
@@ -160,10 +166,12 @@ class MetricSampleData(MetricSample, Data):
         hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
         smoothing = None
         if smooth:
-            smoothing = lambda p: [p[0]+self.config['lips']*self.radius/OOPS, p[1]-self.config['lips']*self.radius/OOPS]
+            smoothing = lambda p: [p[0]+self.config['lips']*self.radius, p[1]-self.config['lips']*self.radius]
         dgms = hom.get_diagram(rips, filt, pivot, smoothing)
         barode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
         tag = f"barcode{'-relative' if relative else ''}"
+        if not smooth:
+            tag += '-nosmooth'
         if save: self.save_plot(folder, dpi, tag, sep)
         if show: plt.show()
         plt.close(fig)
@@ -178,10 +186,12 @@ class MetricSampleData(MetricSample, Data):
         hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
         smoothing = None
         if smooth:
-            smoothing = lambda p: [p[0]+self.config['lips']*self.radius/OOPS, p[1]-self.config['lips']*self.radius/OOPS]
+            smoothing = lambda p: [p[0]+self.config['lips']*self.radius, p[1]-self.config['lips']*self.radius]
         dgms = hom.get_diagram(rips, filt, pivot, smoothing)
         barode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
         tag = f"barcode{'-relative' if relative else ''}-lips"
+        if not smooth:
+            tag += '-nosmooth'
         if save: self.save_plot(folder, dpi, tag, sep)
         if show: plt.show()
         plt.close(fig)
@@ -196,10 +206,12 @@ class MetricSampleData(MetricSample, Data):
         hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
         smoothing = None
         if smooth:
-            smoothing = lambda p: [p[0]+self.config['lips']*self.radius/OOPS, p[1]-self.config['lips']*self.radius/OOPS]
+            smoothing = lambda p: [p[0]+self.config['lips']*self.radius, p[1]-self.config['lips']*self.radius]
         dgms = hom.get_diagram(rips, filt, pivot, smoothing)
         barode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
         tag = f"barcode{'-relative' if relative else ''}-lips-sub{len(subsample)}"
+        if not smooth:
+            tag += '-nosmooth'
         if save: self.save_plot(folder, dpi, tag, sep)
         if show: plt.show()
         plt.close(fig)

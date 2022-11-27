@@ -68,7 +68,7 @@ class Surface:
         if seed is None:
             seed = np.random.randint(len(data))
             print(f'SEED: {seed}')
-        sample_idx = greedysample(data[:,:2], thresh*mult/4, seed)
+        sample_idx = greedysample(data[:,:2], thresh*mult/2, seed)
         constants = [self.local_lips(i, 2*thresh) for i in sample_idx]
         # constants = np.ones(len(sample_idx))*self.lips
         data = np.vstack([data[sample_idx].T, constants]).T # TODO perturb the sample
