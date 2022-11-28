@@ -4,11 +4,11 @@ DIR='data'
 FOLDER='figures'
 
 NAME='surf'
-RES=7
+RES=8
 SURF="$NAME$RES"
 
-THRESH1=100
-THRESH2=150
+THRESH1=50
+THRESH2=120
 
 
 if [ -d "$DIR/$NAME" ]; then
@@ -46,13 +46,13 @@ RUN "main.py $SAMPLE1 --sub-file $SAMPLE2 --save --lips --delaunay --contours --
 RUN "main.py $SAMPLE2 --sub-file $SAMPLE1 --save --lips --delaunay --contours --barcode --nosmooth --alpha 2e4"
 RUN "main.py $SAMPLE2 --sub-file $SAMPLE1 --save --lips --delaunay --contours --color --barcode --alpha 2e4"
 
-# # LIPS COVER
-# RUN "main.py $SAMPLE1 --save --lips --cover --contours"
-# RUN "main.py $SAMPLE1 --save --lips --cover --color --contours"
-# RUN "main.py $SAMPLE1 --save --lips --union --contours"
-# RUN "main.py $SAMPLE1 --save --lips --union --color --contours"
-#
-# # RIPS
-# RUN "main.py $SAMPLE1 --save --rips --contours --barcode"
-# RUN "main.py $SAMPLE2 --save --rips --contours --barcode"
-# RUN "main.py $SAMPLE1 --sub-file $SAMPLE2 --save --lips --rips --contours --barcode"
+# LIPS COVER
+RUN "main.py $SAMPLE1 --save --lips --cover --contours"
+RUN "main.py $SAMPLE1 --save --lips --cover --color --contours"
+RUN "main.py $SAMPLE1 --save --lips --union --contours"
+RUN "main.py $SAMPLE1 --save --lips --union --color --contours"
+
+# RIPS
+RUN "main.py $SAMPLE1 --save --rips --contours --barcode"
+RUN "main.py $SAMPLE2 --save --rips --contours --barcode"
+RUN "main.py $SAMPLE1 --sub-file $SAMPLE2 --save --lips --rips --contours --barcode"
