@@ -17,7 +17,7 @@ from contours.config import COLOR, COLORS
 # SUB_FILE= None
 #
 COEF=2/np.sqrt(3)
-MULT=1.#1.2/COEF
+MULT=0.7/COEF
 
 DATA_DIR = os.path.join('data','test')
 # CUTS=[200, 1000, 1400, 1800, 2500, 4500]
@@ -28,6 +28,7 @@ PAD=1e2
 LIPS=None
 THRESH=None # PAD
 ALPHA=None # 2e8 # None # 2e4
+
 
 # PARSE
 parser = argparse.ArgumentParser(prog='lipser')

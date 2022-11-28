@@ -3,19 +3,6 @@
 DIR='data'
 FOLDER='figures'
 
-# (4) python main.py data/rainier_sub/samples/rainier_sub32-sample4179-2000.csv --sub-file data/rainier_sub/samples/rainier_sub32-sample852-5000.csv --save --lips --delaunay --contours --barcode
-# loading data/rainier_sub/samples/rainier_sub32-sample4179-2000.csv
-# loading data/rainier_sub/samples/rainier_sub32-sample852-5000.csv
-# delaunay: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 24688/24688 [00:00<00:00, 123881.08it/s]
-# Traceback (most recent call last):
-#   File "/Users/kirk/workspace/contours/main.py", line 66, in <module>
-#     complex.lips_sub(subsample, args.local)
-#   File "/Users/kirk/workspace/contours/contours/complex/complex.py", line 112, in lips_sub
-#     s.data['max'] = max(self(0)[v].data['max'] for v in s)
-#   File "/Users/kirk/workspace/contours/contours/complex/complex.py", line 112, in <genexpr>
-#     s.data['max'] = max(self(0)[v].data['max'] for v in s)
-# IndexError: list index out of range
-
 NAME='rainier_sub'
 RES=32
 SURF="$NAME$RES"

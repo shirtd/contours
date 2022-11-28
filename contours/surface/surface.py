@@ -63,12 +63,12 @@ class Surface:
         return 0
     def local_lips(self, i, thresh):
         return max(self._lips(i, j) for j in self.tree.query_ball_point(self[i], thresh))
-    def greedy_sample(self, thresh, mult=1., seed=None, config=None, noise=None):
+    def greedy_sample(self, thresh, mult, seed=None, config=None, noise=None):
         data = self.get_data()[self.function > self.cuts[0]]
         if seed is None:
             seed = np.random.randint(len(data))
             print(f'SEED: {seed}')
-        sample_idx = greedysample(data[:,:2], thresh*mult/2, seed)
+        sample_idx = greedysample(data[:,:2], mult*thresh, seed)
         constants = [self.local_lips(i, 2*thresh) for i in sample_idx]
         # constants = np.ones(len(sample_idx))*self.lips
         data = np.vstack([data[sample_idx].T, constants]).T # TODO perturb the sample

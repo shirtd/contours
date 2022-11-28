@@ -51,11 +51,12 @@ if __name__ == '__main__':
         tag = f'{tag}-{len(subsample)}subsample'
     if args.rips or args.graph or args.delaunay or args.voronoi or args.barcode:
         if args.delaunay or args.voronoi:
-            filter=None # $if args.alpha is None else (lambda f: f < args.alpha)
-            complex = DelaunayComplex(sample.points, sample.radius, verbose=True)
+            filter = None if args.alpha is None else (lambda f: f < args.alpha)
+            complex = DelaunayComplex(sample.points, sample.radius, filter, verbose=True)
             # print(args.alpha, sum(s.data['alpha'] for s in complex(1))/len(complex(1)))
             if args.voronoi:
-                complex = VoronoiComplex(complex, complex.get_boundary(sample.extents), verbose=True)
+                # complex = VoronoiComplex(complex, complex.get_boundary(sample.extents), verbose=True)
+                complex = VoronoiComplex(complex, verbose=True)
         else:
             radius = sample.radius
             if not args.noim:
@@ -115,14 +116,16 @@ if __name__ == '__main__':
             cover_plt = sample.plot_cover(ax, args.color, **KWARGS[args.key])
         elif args.rips or args.graph or args.delaunay:
             rips_plt = sample.plot_rips(ax, complex, args.color, **KWARGS[args.key])
-        # elif args.voronoi:
-        #     # TODO
-        #     print('todo: voronoi viz')
-        #     # voronoi_plt = sample.plot_voronoi(ax, complex, args.color)
-        #     E = np.array([[complex.P[v] for v in e] for e in complex(1) if len(e) == 2])
-        #     for u,v in E:
-        #         ax.plot(u,v, color='black')
-        #     # ax.plot(E[:,0], E[:,1])
+        elif args.voronoi:
+            # TODO
+            print('todo: voronoi viz')
+            V = complex.P
+            ax.scatter(V[:,0], V[:,1], c='red', s=5)
+            # voronoi_plt = sample.plot_voronoi(ax, complex, args.color)
+            E = np.array([[V[v] for v in e] for e in complex(1) if len(e) == 2])
+            for e in E:
+                ax.plot(e[:,0], e[:,1], color='black')
+            # ax.plot(E[:,0], E[:,1])
 
 
         if args.save:

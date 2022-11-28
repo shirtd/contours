@@ -14,7 +14,7 @@ SIZE=0.7
 KWARGS = {  'barcode'   : { 'lw' : 3},
             'surf'      : { 'zorder' : 0, 'alpha' : 0.5},
             'sample'    : { 'zorder' : 10, 'edgecolors' : 'black', 's' : SIZE, 'color' : 'black'},
-            'supsample' : { 'zorder' : 10, 'edgecolors' : 'black', 'facecolors' : 'none', 's' : SIZE, 'lw' : 0.4},
+            'supsample' : { 'zorder' : 10, 'edgecolors' : 'black', 'facecolors' : 'none', 's' : SIZE*6, 'lw' : 2*LW},
             'subsample' : { 'zorder' : 10, 's' : SIZE*2, 'color' : 'black'},
             'cover'     : { 'zorder' : 2, 'alpha' : 0.2, 'color' : COLOR['red']},
             'union'     : { 'zorder' : 2, 'alpha' : 1, 'color' : COLOR['red1']},
