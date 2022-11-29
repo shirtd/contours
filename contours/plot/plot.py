@@ -9,7 +9,7 @@ from contours.util import lmap, format_float
 from contours.config import COLOR
 
 
-def init_barcode(figsize=(14,5), hide_ticks=False, ylim=None):
+def init_barcode(figsize=(14,4), hide_ticks=False, ylim=None):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     if hide_ticks:
         ax[1].set_xticks([])

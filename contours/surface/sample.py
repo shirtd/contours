@@ -118,7 +118,7 @@ class MetricSampleData(MetricSample, Data):
         ######
         #     plot_colors = False
         # rips_plt = {k : self.plot_rips(ax, rips, plot_colors, **v) for k,v in config.items() if not k in hide}
-        do_color = {'min' : False, 'max' : plot_colors, "f" : plot_colors}
+        do_color = {'min' : False if not 'max' in hide else plot_colors, 'max' : plot_colors, "f" : plot_colors}
         rips_plt = {k : self.plot_rips(ax, rips, do_color[k], **v) for k,v in config.items() if not k in hide}
         for i, t in enumerate(self.get_levels()):
             for d in (1,2):

@@ -10,7 +10,7 @@ from contours.config import COLOR, KWARGS, GAUSS_ARGS, parser
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    args.greedyfun = True
+    # args.greedyfun = True
 
     if args.gauss:
         name, folder = 'surf', os.path.join('data', 'surf')

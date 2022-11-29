@@ -11,7 +11,7 @@ SIZE=0.7
 
 # [0.05, 0.2, 0.45, 0.875, 1.09, 1.31]
 
-KWARGS = {  'barcode'   : { 'lw' : 3},
+KWARGS = {  'barcode'   : { 'lw' : 5},
             'surf'      : { 'zorder' : 0, 'alpha' : 0.5},
             'sample'    : { 'zorder' : 10, 'edgecolors' : 'black', 's' : SIZE, 'color' : 'black'},
             'supsample' : { 'zorder' : 10, 'edgecolors' : 'black', 'facecolors' : 'none', 's' : SIZE*6, 'lw' : 2*LW, 'alpha' : 0},

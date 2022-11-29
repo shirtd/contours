@@ -46,6 +46,6 @@
   ],
   "pad": 1500.0,
   "lips": 3.0,
-  "radius": 50.0,
-  "parent": "surf6"
+  "radius": 30.0,
+  "parent": "surf4"
 }
