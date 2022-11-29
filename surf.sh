@@ -7,8 +7,8 @@ NAME='surf'
 RES=6
 SURF="$NAME$RES"
 
-THRESH1=100
-THRESH2=400
+THRESH1=50
+THRESH2=200
 
 
 if [ -d "$DIR/$NAME" ]; then
