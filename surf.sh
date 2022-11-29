@@ -4,20 +4,20 @@ DIR='data'
 FOLDER='figures'
 
 NAME='surf'
-RES=8
+RES=6
 SURF="$NAME$RES"
 
-THRESH1=50
-THRESH2=120
+THRESH1=100
+THRESH2=400
 
 
 if [ -d "$DIR/$NAME" ]; then
   rm -r "$DIR/$NAME"
 fi
 
-# if [ -d "$FOLDER/$SURF" ]; then
-#   rm -r "$FOLDER/$SURF"
-# fi
+if [ -d "$FOLDER/$SURF" ]; then
+  rm -r "$FOLDER/$SURF"
+fi
 
 STEP=0
 RUN () {

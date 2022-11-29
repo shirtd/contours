@@ -13,7 +13,7 @@ from ..util.geometry import coords_to_meters, greedysample
 from ..plot import get_sample, init_surface, plot_rips, plot_points, plot_balls, init_barcode, plot_barcode
 
 
-OOPS=1
+OOPS=2
 
 
 class Sample:
@@ -103,6 +103,8 @@ class MetricSampleData(MetricSample, Data):
         name = f'{parent}-sample{len(data)}-{format_float(radius)}'
         Data.__init__(self, data, name, os.path.join(folder, 'samples'), config=config)
         MetricSample.__init__(self, data[:,:2], data[:,2], data[:,3], **config)
+    def smooth(self, p):
+        return [p[0]+self.config['lips']*self.radius/OOPS, p[1]-self.config['lips']*self.radius/OOPS]
     def plot_rips_filtration(self, rips, config, tag=None, show=True, save=True,
                             folder='figures', plot_colors=False, dpi=300, subsample=None, hide={}):
         fig, ax = self.init_plot()
@@ -164,10 +166,7 @@ class MetricSampleData(MetricSample, Data):
         else:
             pivot = Filtration(rips, 'f')
         hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
-        smoothing = None
-        if smooth:
-            smoothing = lambda p: [p[0]+self.config['lips']*self.radius, p[1]-self.config['lips']*self.radius]
-        dgms = hom.get_diagram(rips, filt, pivot, smoothing)
+        dgms = hom.get_diagram(rips, filt, pivot, self.smooth if smooth else None)
         barode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
         tag = f"barcode{'-relative' if relative else ''}"
         if not smooth:
@@ -184,10 +183,7 @@ class MetricSampleData(MetricSample, Data):
         else:
             pivot = Filtration(rips, 'max')
         hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
-        smoothing = None
-        if smooth:
-            smoothing = lambda p: [p[0]+self.config['lips']*self.radius, p[1]-self.config['lips']*self.radius]
-        dgms = hom.get_diagram(rips, filt, pivot, smoothing)
+        dgms = hom.get_diagram(rips, filt, pivot, self.smooth if smooth else None)
         barode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
         tag = f"barcode{'-relative' if relative else ''}-lips"
         if not smooth:
@@ -204,10 +200,7 @@ class MetricSampleData(MetricSample, Data):
         else:
             pivot = Filtration(rips, 'max')
         hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
-        smoothing = None
-        if smooth:
-            smoothing = lambda p: [p[0]+self.config['lips']*self.radius, p[1]-self.config['lips']*self.radius]
-        dgms = hom.get_diagram(rips, filt, pivot, smoothing)
+        dgms = hom.get_diagram(rips, filt, pivot, self.smooth if smooth else None)
         barode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
         tag = f"barcode{'-relative' if relative else ''}-lips-sub{len(subsample)}"
         if not smooth:

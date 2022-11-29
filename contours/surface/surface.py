@@ -63,14 +63,19 @@ class Surface:
         return 0
     def local_lips(self, i, thresh):
         return max(self._lips(i, j) for j in self.tree.query_ball_point(self[i], thresh))
-    def greedy_sample(self, thresh, mult, seed=None, config=None, noise=None):
+    def greedy_sample(self, thresh, mult, seed=None, greedyfun=False, config=None, noise=None):
         data = self.get_data()[self.function > self.cuts[0]]
         if seed is None:
             seed = np.random.randint(len(data))
             print(f'SEED: {seed}')
-        sample_idx = greedysample(data[:,:2], mult*thresh, seed)
+        if greedyfun:
+            data[:,2] /= self.lips
+            sample_idx = greedysample(data, mult*thresh, seed)
+        else:
+            sample_idx = greedysample(data[:,:2], mult*thresh, seed)
         constants = [self.local_lips(i, 2*thresh) for i in sample_idx]
         # constants = np.ones(len(sample_idx))*self.lips
+        data = self.get_data()[self.function > self.cuts[0]]
         data = np.vstack([data[sample_idx].T, constants]).T # TODO perturb the sample
         return MetricSampleData(data, thresh, self.name, self.folder, self.config)
     def sample(self, thresh, sample=None, config=None):
@@ -83,13 +88,13 @@ class Surface:
         else:
             thresh = sample.radius if thresh is None else thresh
             sample.plot(ax, color='black', zorder=10, s=5)
-            sample.plot_cover(ax, alpha=1, color='gray', zorder=2, radius=thresh)
+            sample.plot_cover(ax, alpha=0.1, color='gray', zorder=2, radius=thresh)
             points = sample.get_data().tolist()
         def onclick(e):
             l = tree.query(np.array([e.xdata, e.ydata]))[1]
             # p = data[l].tolist() + [get_local_lips(self, l)]
             p = data[l].tolist() + [self.lips]
-            ax.add_patch(plt.Circle(p[:2], thresh/2, color=COLOR['red1'], zorder=3, alpha=1))
+            ax.add_patch(plt.Circle(p[:2], thresh, color=COLOR['red1'], zorder=3, alpha=0.2))
             ax.scatter(p[0], p[1], c='black', zorder=4, s=5)
             plt.pause(0.01)
             points.append(p)
@@ -137,7 +142,7 @@ class ScalarFieldData(ScalarField, Data):
         plt.close(fig)
     def save(self, config=None):
         if self.lips is None:
-            self.config['lips'] = lipschitz_grid(self.surface, self.grid)
+            self.config['lips'] = lipschitz_grid(self.surface, self.grid, self.cuts[0])
         Data.save(self, self.surface.tolist())
 
 class USGSScalarFieldData(ScalarFieldData):

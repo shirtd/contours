@@ -3,11 +3,14 @@ import numpy as np
 import os, sys
 
 from contours.surface import USGSScalarFieldData, GaussianScalarFieldData, ScalarFieldFile
+from contours.surface.sample import MetricSampleFile
 from contours.config import COLOR, KWARGS, GAUSS_ARGS, parser
 
 
 if __name__ == '__main__':
     args = parser.parse_args()
+
+    args.greedyfun = True
 
     if args.gauss:
         name, folder = 'surf', os.path.join('data', 'surf')
@@ -32,7 +35,7 @@ if __name__ == '__main__':
 
     sample = None
     if args.greedy:
-        sample = surf.greedy_sample(args.thresh, args.mult, args.seed)
+        sample = surf.greedy_sample(args.thresh, args.mult, args.seed, args.greedyfun)
     elif args.sample_file is not None:
         sample = MetricSampleFile(args.sample_file)
 

@@ -67,6 +67,8 @@ parser.add_argument('--thresh', type=float, default=THRESH, help='cover radius')
 parser.add_argument('--mult', type=float, default=MULT, help='radius mult (greedy param)')
 parser.add_argument('--coef', type=float, default=COEF, help='cover coef')
 parser.add_argument('--greedy', action='store_true', help='greedy sample')
+parser.add_argument('--greedyfun', action='store_true', help='greedy sample by function value')
+# parser.add_argument('--weight', action='store_true', help='weight greedy sample by function value')
 parser.add_argument('--local', action='store_true', help='local lips')
 
 parser.add_argument('--sample-file', default=None, help='sample file')
