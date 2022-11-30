@@ -44,10 +44,17 @@ if __name__ == '__main__':
 
     fig, ax = surf.init_plot()
     surf_plt = surf.plot(ax, **KWARGS['surf'])
+    # surf_plt = surf.plot(ax, zorder=0)
+    # surf_plt['contours'].set_alpha(0.1)
+    # surf_plt['surface'].set_alpha(0.1)
 
     if sample is not None:
-        sample.plot(ax, **KWARGS['sample'])
-        sample.plot_cover(ax, **KWARGS['union' if args.union else 'cover'])
+        # sample.plot(ax, **KWARGS['sample'])
+        # sample.plot_cover(ax, **KWARGS['union' if args.union else 'cover'])
+
+        sample.plot(ax, zorder=10, s=10, facecolor='none', edgecolor='black', lw=0.5)
+        sample.plot(ax, plot_color=True, zorder=9, s=10)
+
         if args.show:
             plt.pause(0.1)
         if args.write or input(f'save {sample.name} (y/*)? ') == 'y':
