@@ -13,7 +13,7 @@ SIZE=0.7
 
 KWARGS = {  'barcode'   : { 'lw' : 5},
             'surf'      : { 'zorder' : 0, 'alpha' : 0.5},
-            'sample'    : { 'zorder' : 10, 'edgecolors' : 'black', 's' : SIZE, 'color' : 'black'},
+            'sample'    : { 'zorder' : 10, 'edgecolors' : 'black', 's' : SIZE, 'color' : 'black', 'alpha' : 1},
             'supsample' : { 'zorder' : 10, 'edgecolors' : 'black', 'facecolors' : 'none', 's' : SIZE*6, 'lw' : 2*LW, 'alpha' : 0},
             'subsample' : { 'zorder' : 10, 's' : SIZE*2, 'color' : 'black'},
             'cover'     : { 'zorder' : 2, 'alpha' : 0.2, 'color' : COLOR['red']},
@@ -39,22 +39,33 @@ KWARGS = {  'barcode'   : { 'lw' : 5},
             # 'graph'     : { 'f' : {'visible' : False, 'zorder' : 1, 'color' : COLOR['red'],
             #                         'fade' : [1, 0.8, 0], 'lw' : LW}}}
 
+
+#                     (weight,  [xpos, ypos],   [xspread, yspread])
+GAUSSES = {'original': [(1,     [-0.2, 0.2],    [0.3, 0.3]),    # base
+                        (0.5,   [-1.3, -0.1],   [0.15, 0.15]),  # small feature
+                        (0.7,   [-0.8, -0.4],   [0.2, 0.2]),    # main feature 1
+                        (0.8,   [-0.8, -0],     [0.4, 0.4]),    # main feature 2
+                        (0.4,   [0.6, 0.0],     [0.4, 0.2]),    # bridge
+                        (0.7,   [1.25, 0.3],    [0.25, 0.25])], # minor feature
+            'surf2':   [(1,     [-0.2, 0.2],    [0.3, 0.3]),
+                        (0.6,   [-1.1, 0.4],    [0.16, 0.13]),
+                        (0.7,   [-0.8, -0.4],   [0.2, 0.2]),
+                        (0.8,   [-0.8, -0],     [0.4, 0.4]),
+                        (0.4,   [0.75, 0.2],    [0.5, 0.3]),
+                        (0.8,   [1.25, 0.35],   [0.25, 0.25])]}
+
 GAUSS_ARGS = {  'pad' : 1.5,
                 'scale' : 1000,
                 # 'lips' : 3.155422091834973,
                 # 'lips' : 3.155422091834973,
-                'lips' : 3.,
+                # 'lips' : 3.,
                 'extents' : [[-2, 2], [-1, 1]],
                 # 'cuts' : [0.05, 0.3, 0.55, 0.8, 1.35],
                 'cuts' : [0.05, 0.2, 0.55, 0.885, 1.15, 1.4],
                 # 'colors' : [COLOR[c] for c in ['green', 'blue', 'purple', 'yellow']],
                 'colors' : [COLOR[c] for c in ['blue','green','yellow','salmon','purple']],
-                'gauss_args' : [(1,     [-0.2, 0.2],    [0.3, 0.3]),
-                                (0.5,   [-1.3, -0.1],   [0.15, 0.15]),
-                                (0.7,   [-0.8, -0.4],   [0.2, 0.2]),
-                                (0.8,   [-0.8, -0],     [0.4, 0.4]),
-                                (0.4,   [0.6, 0.0],     [0.4, 0.2]),
-                                (0.7,   [1.25, 0.3],    [0.25, 0.25])]}
+                            # (weight,  [xpos, ypos],   [xspread, yspread])
+                'gauss_args' : GAUSSES['surf2']}
 
 # CONFIG = {  'surf32' :    {'res' : 32, 'shape' : (2,1), 'pad' : (1.2, 1.55),
 #                         'cuts' : [0.05, 0.3, 0.55, 0.8, 1.35],

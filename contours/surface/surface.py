@@ -88,13 +88,13 @@ class Surface:
         else:
             thresh = sample.radius if thresh is None else thresh
             sample.plot(ax, color='black', zorder=10, s=5)
-            sample.plot_cover(ax, alpha=0.1, color='gray', zorder=2, radius=thresh)
+            sample.plot_cover(ax, alpha=1, color='gray', zorder=2, radius=thresh)
             points = sample.get_data().tolist()
         def onclick(e):
             l = tree.query(np.array([e.xdata, e.ydata]))[1]
             # p = data[l].tolist() + [get_local_lips(self, l)]
             p = data[l].tolist() + [self.lips]
-            ax.add_patch(plt.Circle(p[:2], thresh, color=COLOR['red1'], zorder=3, alpha=0.2))
+            ax.add_patch(plt.Circle(p[:2], thresh, color=COLOR['red1'], zorder=3, alpha=0.5))
             ax.scatter(p[0], p[1], c='black', zorder=4, s=5)
             plt.pause(0.01)
             points.append(p)
