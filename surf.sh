@@ -26,8 +26,8 @@ RUN "load.py data/$NAME/$SURF.csv --contours --barcode --save"
 SAMPLE1="data/surf/samples/surf4-sample1618-45.csv"
 SAMPLE2="data/surf/samples/surf4-sample454-100.csv"
 
-RUN "load.py data/$NAME/$SURF.csv --sample-file $SAMPLE1 --save --color"
-RUN "load.py data/$NAME/$SURF.csv --sample-file $SAMPLE2 --save --cover"
+RUN "load.py data/$NAME/$SURF.csv --sample-file $SAMPLE1 --save --cover"
+RUN "load.py data/$NAME/$SURF.csv --sample-file $SAMPLE2 --save --color"
 
 
 # if [ -d "$DIR/$NAME" ]; then
