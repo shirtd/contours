@@ -91,7 +91,7 @@ class Surface:
         else:
             thresh = sample.radius if thresh is None else thresh
             sample.plot(ax, color='black', zorder=10, s=5)
-            sample.plot_cover(ax, alpha=1, color='gray', zorder=2, radius=thresh)
+            sample.plot_cover(ax, alpha=0.5, color='gray', zorder=2, radius=thresh)
             points = sample.get_data().tolist()
         def onclick(e):
             l = tree.query(np.array([e.xdata, e.ydata]))[1]
