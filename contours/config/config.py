@@ -78,13 +78,15 @@ GAUSS_ARGS = {  'pad' : 1.5,
                 # 'lips' : 3.155422091834973,
                 'lips' : 3.,
                 'extents' : [[-2, 2], [-1, 1]],
-                # 'cuts' : [0.05, 0.3, 0.55, 0.8, 1.35],
-                # 'cuts' : [0.05, 0.2, 0.55, 0.885, 1.15, 1.4],
-                'cuts' : [0.05, 0.2, 0.55, 0.85, 1., 1.1],
-                # 'colors' : [COLOR[c] for c in ['green', 'blue', 'purple', 'yellow']],
+                # # 'cuts' : [0.05, 0.3, 0.55, 0.8, 1.35],
+                # # 'colors' : [COLOR[c] for c in ['green', 'blue', 'purple', 'yellow']],
+                # TODO!
                 'colors' : [COLOR[c] for c in ['blue','green','yellow','salmon','purple']],
-                            # (weight,  [xpos, ypos],   [xspread, yspread])
-                'gauss_args' : GAUSSES['original0']}
+                'cuts' : [0.05, 0.2, 0.55, 0.885, 1.15, 1.4],
+                'gauss_args' : GAUSSES['original']}
+                # # TODO!
+                # 'cuts' : [0.05, 0.2, 0.55, 0.85, 1., 1.1],
+                # 'gauss_args' : GAUSSES['original0']}
 
 # CONFIG = {  'surf32' :    {'res' : 32, 'shape' : (2,1), 'pad' : (1.2, 1.55),
 #                         'cuts' : [0.05, 0.3, 0.55, 0.8, 1.35],

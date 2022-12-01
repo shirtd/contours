@@ -17,11 +17,14 @@ RUN () {
 
 RUN "load.py data/$NAME/$SURF.csv --contours --barcode --save"
 
-# SAMPLE1="data/surf/samples/surf8-sample1654-45.csv"
-# SAMPLE2="data/surf/samples/surf8-sample217-153.csv"
+# # SAMPLE1="data/surf/samples/surf8-sample1654-45.csv"
+# # SAMPLE2="data/surf/samples/surf8-sample217-153.csv"
+#
+# SAMPLE1="data/surf/samples/surf8-sample1662-45.csv"
+# SAMPLE2="data/surf/samples/surf8-sample228-153.csv"
 
-SAMPLE1="data/surf/samples/surf8-sample1662-45.csv"
-SAMPLE2="data/surf/samples/surf8-sample228-153.csv"
+SAMPLE1="data/surf/samples/surf8-sample1673-45.csv"
+SAMPLE2="data/surf/samples/surf8-sample406-113.csv"
 
 RUN "load.py data/$NAME/$SURF.csv --sample-file $SAMPLE1 --save"
 RUN "load.py data/$NAME/$SURF.csv --sample-file $SAMPLE2 --save"
