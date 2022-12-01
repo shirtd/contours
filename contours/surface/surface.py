@@ -76,8 +76,11 @@ class Surface:
         constants = [self.local_lips(i, 2*thresh) for i in sample_idx]
         # constants = np.ones(len(sample_idx))*self.lips
         data = self.get_data()[self.function > self.cuts[0]]
-        data = np.vstack([data[sample_idx].T, constants]).T # TODO perturb the sample
-        return MetricSampleData(data, thresh, self.name, self.folder, self.config)
+        sample = np.vstack([data[sample_idx].T, constants]).T # TODO perturb the sample
+        T = KDTree(sample[:,:2])
+        radius = int(np.ceil(max(T.query(p)[0] for p in data[:,:2])*2/np.sqrt(3)*1.1))
+        print(f'coverage radius: {radius}')
+        return MetricSampleData(sample, radius, self.name, self.folder, self.config)
     def sample(self, thresh, sample=None, config=None):
         fig, ax = self.init_plot()
         surf_plt = self.plot(ax, **KWARGS['surf'])

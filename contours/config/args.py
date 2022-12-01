@@ -51,6 +51,7 @@ parser.add_argument('--save', action='store_true', help='save figures')
 parser.add_argument('--dir', default=FDIR, help='figure output directory')
 parser.add_argument('--folder', default=FDIR, help='figure output directory {deprecated}')
 parser.add_argument('--dpi', type=int, default=DPI, help='image dpi')
+parser.add_argument('--get-radius', action='store_true')
 
 parser.add_argument('--cuts', default=CUTS, nargs='+', type=float, help='cuts')
 parser.add_argument('--colors', default=COLORS, nargs='+', type=str, help='colors')

@@ -4,20 +4,8 @@ DIR='data'
 FOLDER='figures'
 
 NAME='surf'
-RES=6
+RES=8
 SURF="$NAME$RES"
-
-THRESH1=50
-THRESH2=200
-
-
-if [ -d "$DIR/$NAME" ]; then
-  rm -r "$DIR/$NAME"
-fi
-
-if [ -d "$FOLDER/$SURF" ]; then
-  rm -r "$FOLDER/$SURF"
-fi
 
 STEP=0
 RUN () {
@@ -26,22 +14,41 @@ RUN () {
   python $1
 }
 
-# SAMPLE 1 DELAUNAY
-RUN "load.py --write --save --gauss --downsample $RES --barcode --contours --thresh $THRESH1 --greedy"
-SAMPLE1=$( echo "$DIR/$NAME/samples/$SURF-sample"*"-${THRESH1}.csv" )
 
-# SAMPLE1="data/surf/samples/surf4-sample5122-40.csv"
-# RUN "load.py data/$NAME/$SURF.csv --sample-file $SAMPLE1 --save"
+RUN "load.py data/$NAME/$SURF.csv --contours --barcode --save"
+
+# SAMPLE1="data/surf/samples/surf8-sample1654-45.csv"
+# SAMPLE2="data/surf/samples/surf8-sample217-153.csv"
+
+SAMPLE1="data/surf/samples/surf8-sample1662-45.csv"
+SAMPLE2="data/surf/samples/surf8-sample228-153.csv"
+
+RUN "load.py data/$NAME/$SURF.csv --sample-file $SAMPLE1 --save"
+RUN "load.py data/$NAME/$SURF.csv --sample-file $SAMPLE2 --save"
+
+
+# if [ -d "$DIR/$NAME" ]; then
+#   rm -r "$DIR/$NAME"
+# fi
+#
+# if [ -d "$FOLDER/$SURF" ]; then
+#   rm -r "$FOLDER/$SURF"
+# fi
+#
+# THRESH1=70
+# THRESH2=210
+#
+# # SAMPLE 1 DELAUNAY
+# RUN "load.py --write --save --gauss --downsample $RES --barcode --contours --thresh $THRESH1 --greedy"
+# SAMPLE1=$( echo "$DIR/$NAME/samples/$SURF-sample"*"-${THRESH1}.csv" )
+#
+# # SAMPLE 2 DELAUNAY
+# RUN "load.py $DIR/$NAME/$SURF.csv --write --save --thresh $THRESH2 --greedy --alpha 2e4"
+# SAMPLE2=$( echo "$DIR/$NAME/samples/$SURF-sample"*"-${THRESH2}.csv" )
+
 
 RUN "main.py $SAMPLE1 --save --delaunay --contours --color --barcode --alpha 2e4"
 RUN "main.py $SAMPLE1 --save --delaunay --contours --barcode --nosmooth --alpha 2e4"
-
-# SAMPLE 2 DELAUNAY
-RUN "load.py $DIR/$NAME/$SURF.csv --write --save --thresh $THRESH2 --greedy --alpha 2e4"
-SAMPLE2=$( echo "$DIR/$NAME/samples/$SURF-sample"*"-${THRESH2}.csv" )
-
-# SAMPLE2="data/surf/samples/surf4-sample714-120.csv"
-# RUN "load.py data/$NAME/$SURF.csv --sample-file $SAMPLE2 --save"
 
 RUN "main.py $SAMPLE2 --save --delaunay --contours --color --barcode --alpha 2e4"
 RUN "main.py $SAMPLE2 --save --delaunay --contours --barcode --nosmooth --alpha 2e4"

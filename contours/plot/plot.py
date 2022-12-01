@@ -16,7 +16,7 @@ def init_barcode(figsize=(14,4), hide_ticks=False, ylim=None):
     if ylim is not None:
         ax[1].set_ylim(*ylim)
     ax.set_yticks([])
-    plt.tight_layout()
+    plt.tight_layout(pad=10)
     return fig, ax
 
 def init_barcodes(figsize=(14,9), hide_ticks=False, ylim=None):

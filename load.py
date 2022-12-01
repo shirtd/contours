@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from scipy.spatial import KDTree
 import numpy as np
 import os, sys
 
@@ -49,15 +50,15 @@ if __name__ == '__main__':
     # surf_plt['surface'].set_alpha(0.1)
 
     if sample is not None:
-        # sample.plot(ax, **KWARGS['sample'])
-        # sample.plot_cover(ax, **KWARGS['union' if args.union else 'cover'])
+        sample.plot(ax, **KWARGS['sample'])
+        sample.plot_cover(ax, **KWARGS['union' if args.union else 'cover'])
 
-        sample.plot(ax, zorder=10, s=10, facecolor='none', edgecolor='black', lw=0.5)
-        sample.plot(ax, plot_color=True, zorder=9, s=10)
+        # sample.plot(ax, zorder=10, s=10, facecolor='none', edgecolor='black', lw=0.5)
+        # sample.plot(ax, plot_color=True, zorder=9, s=10)
 
         if args.show:
             plt.pause(0.1)
-        if args.write or input(f'save {sample.name} (y/*)? ') == 'y':
+        if args.sample or args.greedy and (args.write or input(f'save {sample.name} (y/*)? ') == 'y'):
             sample.save(sample.get_data())
         if args.save:
             sample.save_plot(args.folder, args.dpi)

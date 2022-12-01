@@ -66,11 +66,12 @@ class MetricSample(Sample):
     def plot_cover(self, ax, plot_colors=False, color=COLOR['red'], zorder=0, radius=None, **kwargs):
         balls = []
         radius = self.radius if radius is None else radius
-        kwargs['edgecolor'] = 'none'
+        # kwargs['edgecolor'] = 'none'
         for p,f in zip(self.points, self.function):
             cut = self.get_cut(f)
             c = self.colors[cut] if plot_colors else color
-            s = plt.Circle(p, radius, facecolor=c, zorder=zorder+cut, **kwargs)
+            # s = plt.Circle(p, radius, facecolor=c, zorder=zorder+cut, **kwargs)
+            s = plt.Circle(p, radius, color=c, zorder=zorder+cut, **kwargs)
             balls.append(s)
             ax.add_patch(s)
         return balls

@@ -11,13 +11,13 @@ SIZE=0.7
 
 # [0.05, 0.2, 0.45, 0.875, 1.09, 1.31]
 
-KWARGS = {  'barcode'   : { 'lw' : 5},
+KWARGS = {  'barcode'   : { 'lw' : 10},
             'surf'      : { 'zorder' : 0, 'alpha' : 0.5},
             'sample'    : { 'zorder' : 10, 'edgecolors' : 'black', 's' : SIZE, 'color' : 'black', 'alpha' : 1},
             'supsample' : { 'zorder' : 10, 'edgecolors' : 'black', 'facecolors' : 'none', 's' : SIZE*6, 'lw' : 2*LW, 'alpha' : 0},
             'subsample' : { 'zorder' : 10, 's' : SIZE*2, 'color' : 'black'},
-            'cover'     : { 'zorder' : 2, 'alpha' : 0.2, 'color' : COLOR['red']},
-            'union'     : { 'zorder' : 2, 'alpha' : 1, 'color' : COLOR['red1']},
+            'cover'     : { 'zorder' : 2, 'alpha' : 0.2, 'color' : COLOR['red'], 'lw' : 1},
+            'union'     : { 'zorder' : 2, 'alpha' : 1, 'color' : COLOR['red1'], 'lw' : 1},
             'graph'     : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0], 'lw' : LW},
             'rips'      : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW},
             'delaunay'  : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW},
@@ -47,6 +47,24 @@ GAUSSES = {'original': [(1,     [-0.2, 0.2],    [0.3, 0.3]),    # base
                         (0.8,   [-0.8, -0],     [0.4, 0.4]),    # main feature 2
                         (0.4,   [0.6, 0.0],     [0.4, 0.2]),    # bridge
                         (0.7,   [1.25, 0.3],    [0.25, 0.25])], # minor feature
+           'original0':[(0.8,     [-0.2, 0.2],    [0.3, 0.3]),    # main feature
+                        (0.72,   [-1.37, -0.1],   [0.15, 0.15]),  # small feature
+                        (0.6,   [-0.8, -0.4],   [0.2, 0.2]),    # second feature
+                        (0.7,   [-0.8, -0],     [0.4, 0.4]),    # second feature 2
+                        (0.3,   [0.6, 0.0],     [0.4, 0.2]),    # bridge
+                        (0.82,   [1.25, 0.2],    [0.26, 0.25])], # minor feature
+           'original1':[(0.85,     [-0.1, 0.18],    [0.3, 0.3]),    # main feature
+                        (0.65,   [-0.8, 0.08],     [0.4, 0.4]),    # second feature 2
+                        (0.65,   [-0.8, -0.4],   [0.2, 0.2]),    # second feature
+                        (0.6,   [-1.1, 0.55],   [0.15, 0.13]),  # small feature
+                        (0.2,   [0.6, 0.0],     [0.4, 0.2]),    # bridge
+                        (0.3,   [1., 0.1],     [0.5, 0.4])],    # bridge
+            'surf1':   [(0.7,   [-0.25, 0.2],    [0.25, 0.2]),
+                        (0.5,   [-1.1, 0.4],    [0.16, 0.13]),
+                        (0.6,   [-0.65, -0.4],   [0.2, 0.2]),
+                        (0.5,   [-0.8, -0],     [0.4, 0.4]),
+                        (0.45,   [0.75, 0.2],    [0.4, 0.3]),
+                        (0.45,   [1.25, 0.35],   [0.25, 0.25])],
             'surf2':   [(1,     [-0.2, 0.2],    [0.3, 0.3]),
                         (0.6,   [-1.1, 0.4],    [0.16, 0.13]),
                         (0.7,   [-0.8, -0.4],   [0.2, 0.2]),
@@ -58,14 +76,15 @@ GAUSS_ARGS = {  'pad' : 1.5,
                 'scale' : 1000,
                 # 'lips' : 3.155422091834973,
                 # 'lips' : 3.155422091834973,
-                # 'lips' : 3.,
+                'lips' : 3.,
                 'extents' : [[-2, 2], [-1, 1]],
                 # 'cuts' : [0.05, 0.3, 0.55, 0.8, 1.35],
-                'cuts' : [0.05, 0.2, 0.55, 0.885, 1.15, 1.4],
+                # 'cuts' : [0.05, 0.2, 0.55, 0.885, 1.15, 1.4],
+                'cuts' : [0.05, 0.2, 0.55, 0.85, 1., 1.1],
                 # 'colors' : [COLOR[c] for c in ['green', 'blue', 'purple', 'yellow']],
                 'colors' : [COLOR[c] for c in ['blue','green','yellow','salmon','purple']],
                             # (weight,  [xpos, ypos],   [xspread, yspread])
-                'gauss_args' : GAUSSES['surf2']}
+                'gauss_args' : GAUSSES['original0']}
 
 # CONFIG = {  'surf32' :    {'res' : 32, 'shape' : (2,1), 'pad' : (1.2, 1.55),
 #                         'cuts' : [0.05, 0.3, 0.55, 0.8, 1.35],
