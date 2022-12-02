@@ -16,8 +16,8 @@ from contours.config import COLOR, COLORS
 # SAMPLE_FILE=None # os.path.join(DDIR, 'samples', SAMPLE) #
 # SUB_FILE= None
 #
-COEF=2/np.sqrt(3)
-MULT=0.7/COEF
+COEF=1.#2/np.sqrt(3)
+MULT=1.#0.7/COEF
 
 DATA_DIR = os.path.join('data','test')
 # CUTS=[200, 1000, 1400, 1800, 2500, 4500]

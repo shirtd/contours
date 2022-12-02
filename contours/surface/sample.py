@@ -116,6 +116,8 @@ class MetricSampleData(MetricSample, Data):
                 self.plot(ax, **KWARGS['supsample'])
             if not 'subsample' in hide:
                 subsample.plot(ax, plot_color=plot_colors, **KWARGS['subsample'])
+                if plot_colors:
+                    subsample.plot(ax, zorder=10, s=10, facecolor='none', edgecolor='black', lw=0.3)
         ######
         #     plot_colors = False
         # rips_plt = {k : self.plot_rips(ax, rips, plot_colors, **v) for k,v in config.items() if not k in hide}

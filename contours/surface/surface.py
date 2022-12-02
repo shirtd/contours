@@ -63,6 +63,15 @@ class Surface:
         return 0
     def local_lips(self, i, thresh):
         return max(self._lips(i, j) for j in self.tree.query_ball_point(self[i], thresh))
+    def get_radius(self, points, radius, mult=3):
+        T = KDTree(points)
+        # return int(np.ceil(max(T.query(p,k=3)[0][2] for p in points) / 2))
+        data = self.get_data()[self.function > self.cuts[0]]
+        radius = max(T.query(p)[0] for p in data[:,:2])
+        dx = (self.grid[0].max() - self.grid[0].min()) / self.shape[0]
+        dy = (self.grid[1].max() - self.grid[1].min()) / self.shape[1]
+        error = np.sqrt(dx**2 + dy**2) / mult
+        return int(np.ceil(radius + error))
     def greedy_sample(self, thresh, mult, seed=None, greedyfun=False, config=None, noise=None):
         data = self.get_data()[self.function > self.cuts[0]]
         if seed is None:
@@ -77,8 +86,10 @@ class Surface:
         # constants = np.ones(len(sample_idx))*self.lips
         data = self.get_data()[self.function > self.cuts[0]]
         sample = np.vstack([data[sample_idx].T, constants]).T # TODO perturb the sample
-        T = KDTree(sample[:,:2])
-        radius = int(np.ceil(max(T.query(p)[0] for p in data[:,:2])*2/np.sqrt(3)*1.1))
+        # T = KDTree(sample[:,:2])
+        # radius = int(np.ceil(max(T.query(p)[0] for p in data[:,:2])*2/np.sqrt(3)*1.1))
+        # radius = int(np.ceil(max(T.query(p)[0] for p in data[:,:2])))
+        radius = self.get_radius(sample[:,:2], thresh)
         print(f'coverage radius: {radius}')
         return MetricSampleData(sample, radius, self.name, self.folder, self.config)
     def sample(self, thresh, sample=None, config=None):
@@ -91,7 +102,7 @@ class Surface:
         else:
             thresh = sample.radius if thresh is None else thresh
             sample.plot(ax, color='black', zorder=10, s=5)
-            sample.plot_cover(ax, alpha=0.5, color='gray', zorder=2, radius=thresh)
+            sample.plot_cover(ax, alpha=0.3, color='gray', zorder=2, radius=thresh)
             points = sample.get_data().tolist()
         def onclick(e):
             l = tree.query(np.array([e.xdata, e.ydata]))[1]

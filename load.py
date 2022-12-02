@@ -51,8 +51,8 @@ if __name__ == '__main__':
         if args.color:
             surf_plt['contours'].set_alpha(0.1)
             surf_plt['surface'].set_alpha(0.1)
-            sample.plot(ax, zorder=10, s=10, facecolor='none', edgecolor='black', lw=0.5)
-            sample.plot(ax, plot_color=True, zorder=9, s=10)
+            sample.plot(ax, plot_color=True, **KWARGS['subsample']) # zorder=9, s=10)
+            sample.plot(ax, zorder=10, s=10, facecolor='none', edgecolor='black', lw=0.3)
         else:
             sample.plot(ax, **KWARGS['sample'])
         if args.union or args.cover:
