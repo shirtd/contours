@@ -9,7 +9,7 @@ from contours.util import lmap, format_float
 from contours.config import COLOR
 
 
-def init_barcode(figsize=(14,4), hide_ticks=False, ylim=None):
+def init_barcode(figsize=(14,3.3), hide_ticks=False, ylim=None):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     if hide_ticks:
         ax[1].set_xticks([])
@@ -40,28 +40,11 @@ def reset_plot(ax, scale=None, clear=True):
         ax.set_xlim(-scale, scale)
         ax.set_ylim(-scale, scale)
 
-# def init_surface(shape, pad=1.3, mult=10, extents=None):
-#     fig, ax = get_fig((shape[0] / shape[1], 1), mult)
-#     ax.axis('scaled')
-#     if extents is None:
-#         l = np.array(shape) * np.array(pad)
-#         ax.set_xlim(-l[0],l[0])
-#         ax.set_ylim(-l[1],l[1])
-#     else:
-#         l = np.array(extents) * 1.3
-#         ax.set_xlim(*extents[0])
-#         ax.set_ylim(*extents[1])
-#     ax.invert_yaxis()
-#     ax.axis('off')
-#     plt.tight_layout()
-#     return fig, ax
-
 def init_surface(extents, pad=1000, mult=12):
     extents = [[a-pad,b+pad] for a,b in extents]
     dx = abs(extents[0][0] - extents[0][1])
     dy = abs(extents[1][0] - extents[1][1])
     fig, ax = get_fig((1, dy/dx), mult)
-    # fig, ax = plt.subplots()
     ax.invert_yaxis()
     ax.axis('off')
     ax.axis('scaled')
@@ -70,9 +53,11 @@ def init_surface(extents, pad=1000, mult=12):
     plt.tight_layout()
     return fig, ax
 
-def plot_barcode(ax, dgm, cuts, colors, lw=5, thresh=0, *args, **kwargs):
-    ax.set_xlim(cuts[0], cuts[-1])
-    dgm = np.array([p for p in dgm if p[1]-p[0] > thresh and p[1] != np.inf])
+def plot_barcode(ax, dgm, cuts, colors, lw=5, pad=0.05, *args, **kwargs):
+    pad *= (cuts[-1] - cuts[0])
+    ax.set_xlim(cuts[0] - pad, cuts[-1] + pad)
+    # TODO ! extra infinite features from image persistence !
+    dgm = np.array([p for p in dgm if p[1] > p[0] and p[1] != np.inf])
     if not len(dgm):
         return None
     for i, (birth, death) in enumerate(dgm):
@@ -85,8 +70,8 @@ def plot_barcode(ax, dgm, cuts, colors, lw=5, thresh=0, *args, **kwargs):
                 ax.plot([birth, b], [i, i], c=c, lw=lw)
             elif birth <= a and b < death:
                 ax.plot([b, a], [i, i], c=c, lw=lw)
-            # if death == np.inf:
-            #       ax.plot([lim, lim+0.1], [i, i], c='black', linestyle='dotted')
+            # elif death == np.inf:
+            #     ax.plot([cuts[-1], cuts[-1] + pad], [i, i], c='black', linestyle='dotted')
     ax.get_yaxis().set_visible(False)
     plt.tight_layout()
     return ax

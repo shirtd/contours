@@ -3,8 +3,8 @@ import numpy as np
 from contours.config import COLOR
 
 
-LW=0.25
-SIZE=0.7
+LW=0.4
+SIZE=1
 
 # TODO: make this a function
 # pass args to modify defaults
@@ -34,10 +34,6 @@ KWARGS = {  'barcode'   : { 'lw' : 10},
                             'voronoi': { 'zorder' : 1, 'color' : COLOR['blue'], 'fade' : [1, 0.8, 0.6], 'lw' : LW},
                             'cover' : { 'zorder' : 2, 'alpha' : 0.2, 'color' : COLOR['blue']},
                             'union' : { 'zorder' : 2, 'alpha' : 1, 'color' : COLOR['blue1']}}}
-            # 'rips'      : { 'f' : {'visible' : False, 'zorder' : 1, 'color' : COLOR['red'],
-            #                         'fade' : [1, 0.8, 0.6], 'lw' : LW}},
-            # 'graph'     : { 'f' : {'visible' : False, 'zorder' : 1, 'color' : COLOR['red'],
-            #                         'fade' : [1, 0.8, 0], 'lw' : LW}}}
 
 
 #                     (weight,  [xpos, ypos],   [xspread, yspread])
@@ -82,7 +78,7 @@ GAUSS_ARGS = {  'pad' : 1.5,
                 # # 'colors' : [COLOR[c] for c in ['green', 'blue', 'purple', 'yellow']],
                 # TODO!
                 'colors' : [COLOR[c] for c in ['blue','green','yellow','salmon','purple']],
-                'cuts' : [0.05, 0.2, 0.55, 0.885, 1.15, 1.4],
+                'cuts' : [0.05, 0.2, 0.55, 0.885, 1.15, 1.35],
                 'gauss_args' : GAUSSES['original']}
                 # # TODO!
                 # 'cuts' : [0.05, 0.2, 0.55, 0.85, 1., 1.1],

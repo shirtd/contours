@@ -11,7 +11,6 @@ class Data:
         config = {**self.config, **({} if config is None else config)}
         config = {k : v.tolist() if isinstance(v, np.ndarray) else v for k,v in config.items()}
         json_file = os.path.join(self.folder, f'{self.name}.json')
-        # print(f'saving {json_file}')
         with open(json_file, 'w') as f:
             json.dump(config, f, indent=2)
     def save_data(self, data=None):

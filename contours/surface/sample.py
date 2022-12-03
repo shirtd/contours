@@ -4,7 +4,7 @@ import numpy as np
 import os, json
 
 from ..config import COLOR, KWARGS
-from ..data import Data, DataFile
+from ..data import Data, DataFile, Function, PointCloud
 from ..util import lmap, format_float
 from ..complex import RipsComplex
 from ..persistence import Diagram, Filtration
@@ -16,46 +16,30 @@ from ..plot import get_sample, init_surface, plot_rips, plot_points, plot_balls,
 OOPS=2
 
 
-class Sample:
+class Sample(Function, PointCloud):
     def __init__(self, points, function, cuts, colors, pad, parent):
-        self.points, self.function = points, function
-        self.cuts, self.colors, self.pad = cuts, colors, pad
-        self.parent = parent
+        Function.__init__(self, function, cuts, colors)
+        PointCloud.__init__(self, points)
+        self.pad, self.parent = pad, parent
     def get_data(self):
         return np.vstack([self.points.T, self.function]).T
-    def get_cut(self, f):
-        for i, (a,b) in enumerate(zip(self.cuts[:-1], self.cuts[1:])):
-            if a <= f < b:
-                return i
-        return 0
     def get_levels(self):
         cuts = [int(a+(b-a)/2) for a,b in zip(self.cuts[:-1], self.cuts[1:])]
         return [x for t in zip(self.cuts, cuts) for x in t] + [self.cuts[-1]]
-    def __getitem__(self, i):
-        return self.points[i]
-    def __call__(self, i):
-        # if i < len(self):
-        return self.function[i]
-        # print(f"index {i} out of range({len(self)})")
-        # return self.function.min()
-    def __iter__(self):
-        for p in self.points:
-            yield p
-    def __len__(self):
-        return len(self.function)
+    # TODO
+    # def plot(self, ax, plot_color=False, **kwargs)
+    #     if plot_color:
+    #         kwargs['color'] = [self.colors[self.get_cut(f)] for f in self.function]
+    #     return PointCloud.plot(self, ax, **kwargs)
     def plot(self, ax, visible=True, plot_color=False, **kwargs):
         if plot_color:
             kwargs['color'] = [self.colors[self.get_cut(f)] for f in self.function]
-        p = ax.scatter(self[:,0], self[:,1], **kwargs)
-        p.set_visible(visible)
-        return p
+        return PointCloud.plot(self, ax, visible, **kwargs)
 
 class MetricSample(Sample):
     def __init__(self, points, function, constants, radius, extents, cuts, colors, pad=0, lips=1., parent='test'):
         Sample.__init__(self, points, function, cuts, colors, pad, parent)
         self.constants, self.extents, self.radius = constants, extents, radius
-    def get_data(self):
-        return np.vstack([Sample.get_data(self).T, self.constants]).T
     def init_plot(self):
         return init_surface(self.extents, self.pad)
     def get_tag(self, args):
@@ -75,6 +59,7 @@ class MetricSample(Sample):
             balls.append(s)
             ax.add_patch(s)
         return balls
+    # TODO redundant
     def plot_balls(self, ax, radii, plot_colors=False, color=COLOR['red'], zorder=0, **kwargs):
         balls = []
         kwargs['edgecolor'] = 'none'

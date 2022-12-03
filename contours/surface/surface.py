@@ -7,28 +7,24 @@ import os
 
 # from lips.topology.util import sfa_dio
 from ..config import COLOR, KWARGS
-from ..data import Data, DataFile
-from ..surface.sample import MetricSampleData
+from ..data import Data, DataFile, Function, PointCloud
+from ..surface.sample import Sample, MetricSampleData
 from ..plot import get_sample, init_surface, init_barcode, plot_barcode
 from ..util.grid import gaussian_field, down_sample, lipschitz_grid
 from ..util.geometry import coords_to_meters, greedysample
+from ..util.topology import init_diagrams
 from ..util import lmap, format_float, diff
 
 
-class Surface:
+class Surface(Function, PointCloud):
     def __init__(self, surface, grid, cuts, colors, pad=0):
-        self.surface, self.function, self.shape = surface, surface.flatten(), surface.shape
-        self.grid, self.grid_points = grid, np.vstack(lmap(lambda x: x.flatten(), grid)).T
-        self.cuts, self.colors, self.pad = cuts, colors, pad
-        self.tree = KDTree(self.grid_points)
-    def __len__(self):
-        return len(self.function)
-    def __call__(self, i):
-        return self.function[i]
-    def __getitem__(self, i):
-        return self.grid_points[i]
+        Function.__init__(self, surface.flatten(), cuts, colors)
+        PointCloud.__init__(self, np.vstack(lmap(lambda x: x.flatten(), grid)).T)
+        self.surface, self.grid = surface, grid
+        self.shape, self.pad = surface.shape, pad
+        self.tree = KDTree(self.points)
     def get_data(self):
-        return np.vstack([self.grid_points.T, self.surface.flatten()]).T
+        return np.vstack([self.points.T, self.surface.flatten()]).T
     def init_plot(self):
         return init_surface(self.extents, self.pad)
     def plot(self, ax, zorder=0, **kwargs):
@@ -45,11 +41,8 @@ class Surface:
             rel = dio.Filtration([s for s in filt if s.data <= self.cuts[0]])
         else:
             filt = dio.Filtration([s for s in filt if _filter(s)])
-        if rel is None:
-            hom = dio.homology_persistence(filt)
-        else:
-            hom = dio.homology_persistence(filt, rel)
-        dgms = [np.array([[p.birth, p.death if p.death < np.inf else -np.inf] for p in d]) if len(d) else np.ndarray((0,2)) for d in dio.init_diagrams(hom, filt)]
+        hom = dio.homology_persistence(filt) if rel is None else dio.homology_persistence(filt, rel)
+        dgms = init_diagrams(hom, filt)
         barcode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
         tag = f"barcode{'-relative' if relative else ''}"
         if save: self.save_plot(folder, dpi, tag, sep)
@@ -65,7 +58,6 @@ class Surface:
         return max(self._lips(i, j) for j in self.tree.query_ball_point(self[i], thresh))
     def get_radius(self, points, radius, mult=3):
         T = KDTree(points)
-        # return int(np.ceil(max(T.query(p,k=3)[0][2] for p in points) / 2))
         data = self.get_data()[self.function > self.cuts[0]]
         radius = max(T.query(p)[0] for p in data[:,:2])
         dx = (self.grid[0].max() - self.grid[0].min()) / self.shape[0]
@@ -83,12 +75,8 @@ class Surface:
         else:
             sample_idx = greedysample(data[:,:2], mult*thresh, seed)
         constants = [self.local_lips(i, 2*thresh) for i in sample_idx]
-        # constants = np.ones(len(sample_idx))*self.lips
         data = self.get_data()[self.function > self.cuts[0]]
         sample = np.vstack([data[sample_idx].T, constants]).T # TODO perturb the sample
-        # T = KDTree(sample[:,:2])
-        # radius = int(np.ceil(max(T.query(p)[0] for p in data[:,:2])*2/np.sqrt(3)*1.1))
-        # radius = int(np.ceil(max(T.query(p)[0] for p in data[:,:2])))
         radius = self.get_radius(sample[:,:2], thresh)
         print(f'coverage radius: {radius}')
         return MetricSampleData(sample, radius, self.name, self.folder, self.config)
@@ -106,7 +94,6 @@ class Surface:
             points = sample.get_data().tolist()
         def onclick(e):
             l = tree.query(np.array([e.xdata, e.ydata]))[1]
-            # p = data[l].tolist() + [get_local_lips(self, l)]
             p = data[l].tolist() + [self.lips]
             ax.add_patch(plt.Circle(p[:2], thresh, color=COLOR['red1'], zorder=3, alpha=0.5))
             ax.scatter(p[0], p[1], c='black', zorder=4, s=5)
@@ -125,11 +112,10 @@ class Surface:
 class ScalarField(Surface):
     def __init__(self, surface, extents, cuts, colors, pad=0, lips=None):
         self.extents, self.lips = extents, lips
-        grid = self.get_grid(extents, surface.shape)
+        dx = np.linspace(*extents[0], surface.shape[1])
+        dy = np.linspace(*extents[1], surface.shape[0])
+        grid = np.stack(np.meshgrid(dx, dy))
         Surface.__init__(self, surface, grid, cuts, colors, pad)
-    def get_grid(self, extents, shape):
-        return np.stack(np.meshgrid(np.linspace(*extents[0], shape[1]),
-                                    np.linspace(*extents[1], shape[0])))
 
 class ScalarFieldData(ScalarField, Data):
     def __init__(self, name, folder, surface, extents, cuts, colors, pad=0, lips=None):

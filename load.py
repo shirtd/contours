@@ -65,7 +65,7 @@ if __name__ == '__main__':
             if args.show:
                 plt.pause(0.1)
             if args.write or input(f'save {sample.name} (y/*)? ') == 'y':
-                sample.save(sample.get_data())
+                sample.save()
         elif args.show:
             plt.show()
     else:

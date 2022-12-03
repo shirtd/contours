@@ -8,9 +8,11 @@ import pickle as pkl
 import numpy as np
 import sys, time, gc
 
-
 def dio_diagram(D):
     return [np.array([[p.birth, p.death] for p in d]) if len(d) else np.ndarray((0,2)) for d in D]
+
+def init_diagrams(hom, filt):
+    return dio_diagram(dio.init_diagrams(hom, filt))
 
 def in_rng(c, I, open=False):
     return ((I[0] < c < I[1]) if open
