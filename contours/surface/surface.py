@@ -9,7 +9,7 @@ import os
 from ..config import COLOR, KWARGS
 from ..data import Data, DataFile, Function, PointCloud
 from ..surface.sample import Sample, MetricSampleData
-from ..plot import get_sample, init_surface, init_barcode, plot_barcode
+from ..plot import init_surface, init_barcode, plot_barcode
 from ..util.grid import gaussian_field, down_sample, lipschitz_grid
 from ..util.geometry import coords_to_meters, greedysample
 from ..util.topology import init_diagrams
@@ -30,32 +30,21 @@ class Surface(Function, PointCloud):
     def plot(self, ax, zorder=0, **kwargs):
         return {'surface' : ax.contourf(*self.grid, self.surface, levels=self.cuts, colors=self.colors, zorder=zorder, **kwargs),
                 'contours' : ax.contour(*self.grid, self.surface, levels=self.cuts[1:], colors=self.colors[1:], zorder=zorder+1)}
-    def plot_barcode(self, name, show=False, save=False, folder='./', dpi=300, sep='_', relative=False, **kwargs):
+    def plot_barcode(self, name, show=False, save=False, folder='./', dpi=300, sep='_', **kwargs):
         fig, ax = init_barcode()
-        filt, rel = dio.fill_freudenthal(self.surface), None
-        def _filter(s):
+        filt = dio.fill_freudenthal(self.surface)
+        def f(s):
             if s.dimension() == 0:
                 return s.data > self.cuts[0]
             return min(self(i) for i in s) > self.cuts[0]
-        if relative:
-            rel = dio.Filtration([s for s in filt if s.data <= self.cuts[0]])
-        else:
-            filt = dio.Filtration([s for s in filt if _filter(s)])
-        hom = dio.homology_persistence(filt) if rel is None else dio.homology_persistence(filt, rel)
+        filt = dio.Filtration([s for s in filt if f(s)])
+        hom = dio.homology_persistence(filt)
         dgms = init_diagrams(hom, filt)
         barcode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
-        tag = f"barcode{'-relative' if relative else ''}"
-        if save: self.save_plot(folder, dpi, tag, sep)
+        if save: self.save_plot(folder, dpi, "barcode", sep)
         if show: plt.show()
         plt.close(fig)
         return dgms
-    def _lips(self, i, j):
-        d = la.norm(self[i] - self[j])
-        if d:
-            return abs(self(i) - self(j)) / d
-        return 0
-    def local_lips(self, i, thresh):
-        return max(self._lips(i, j) for j in self.tree.query_ball_point(self[i], thresh))
     def get_radius(self, points, radius, mult=3):
         T = KDTree(points)
         data = self.get_data()[self.function > self.cuts[0]]
@@ -65,25 +54,18 @@ class Surface(Function, PointCloud):
         error = np.sqrt(dx**2 + dy**2) / mult
         return int(np.ceil(radius + error))
     def greedy_sample(self, thresh, mult, seed=None, greedyfun=False, config=None, noise=None):
-        data = self.get_data()[self.function > self.cuts[0]]
+        data = self.get_data()[self.function > self.cuts[0]-thresh*self.lips]
         if seed is None:
             seed = np.random.randint(len(data))
             print(f'SEED: {seed}')
-        if greedyfun:
-            data[:,2] /= self.lips
-            sample_idx = greedysample(data, mult*thresh, seed)
-        else:
-            sample_idx = greedysample(data[:,:2], mult*thresh, seed)
-        constants = [self.local_lips(i, 2*thresh) for i in sample_idx]
-        data = self.get_data()[self.function > self.cuts[0]]
-        sample = np.vstack([data[sample_idx].T, constants]).T # TODO perturb the sample
+        sample = data[greedysample(data[:,:2], mult*thresh, seed)]
         radius = self.get_radius(sample[:,:2], thresh)
         print(f'coverage radius: {radius}')
         return MetricSampleData(sample, radius, self.name, self.folder, self.config)
     def sample(self, thresh, sample=None, config=None):
         fig, ax = self.init_plot()
         surf_plt = self.plot(ax, **KWARGS['surf'])
-        data = self.get_data()[self.function > self.cuts[0]]
+        data = self.get_data()
         tree = KDTree(data[:,:2])
         if sample is None:
             points = []
@@ -107,7 +89,6 @@ class Surface(Function, PointCloud):
             points = np.vstack(sorted(points, key=lambda x: x[2]))
             return MetricSampleData(points, thresh, self.name, self.folder, self.config)
         return None
-
 
 class ScalarField(Surface):
     def __init__(self, surface, extents, cuts, colors, pad=0, lips=None):

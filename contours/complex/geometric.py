@@ -7,8 +7,10 @@ import diode
 
 from ..complex.complex import Complex, SimplicialComplex, DualComplex
 from ..util.geometry import circumcenter, circumradius
+from ..plot import plot_vertex, plot_edge, plot_poly
 from ..util.topology import in_bounds, to_path
 from ..util.grid import local_lips
+from ..config import COLOR
 from ..util import stuple, tqit
 
 
@@ -16,6 +18,21 @@ class EmbeddedComplex(Complex):
     def __init__(self, P):
         self.P = P
         Complex.__init__(self, P.shape[-1])
+    def orient_face(self, s):
+        return s
+    def plot_vertices(self, ax, visible=True, **kwargs):
+        return {v : plot_vertex(ax, self.P[v[0]], visible, **kwargs) for v in self(0)}
+    def plot_edges(self, ax, visible=True, **kwargs):
+        return {e : plot_edge(ax, self.P[e], visible, **kwargs) for e in self(1)}
+    def plot_polys(self, ax, visible=True, color_list=None, color=COLOR['red'], **kwargs):
+        color_list = [color for _ in self(2)] if color_list is None else color_list
+        return {t : plot_poly(ax, self.P[self.orient_face(t)], visible, color=c, **kwargs) for t,c in zip(self(2),color_list)}
+    def plot(self, ax, color=COLOR['red'], edge_color=COLOR['black'], visible=True, fade=[1, 0.3, 0.15], zorder=1, alpha=1, s=9, tri_colors=None, edge_colors=None, lw=0.1):
+        edge_kw = {'color' : edge_color} if edge_colors is None else {'color_list' : edge_colors}
+        tri_kw = {'color' : color} if tri_colors is None else {'color_list' : tri_colors}
+        return {0 : self.plot_vertices(ax, visible, alpha=alpha*fade[0], zorder=zorder+2, s=s, color='black'),
+                1 : self.plot_edges(ax, visible, alpha=alpha*fade[1], zorder=zorder+1, lw=lw, **edge_kw),
+                2 : self.plot_polys(ax, visible, alpha=alpha*fade[2], zorder=zorder, **tri_kw)}
     def get_boundary(self, bounds):
         out = {s for s in self(self.dim) if not self.in_bounds(s, bounds)}
         return {f for s in out for f in self.closure(s)}

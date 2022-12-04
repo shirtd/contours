@@ -3,10 +3,11 @@ from scipy.spatial import KDTree
 import numpy as np
 import os, sys
 
+from contours.config import COLOR, KWARGS, GAUSS_ARGS
+from contours.config.args import parser
+
 from contours.surface import USGSScalarFieldData, GaussianScalarFieldData, ScalarFieldFile
 from contours.surface.sample import MetricSampleFile
-from contours.config import COLOR, KWARGS, GAUSS_ARGS, parser
-
 
 if __name__ == '__main__':
     args = parser.parse_args()

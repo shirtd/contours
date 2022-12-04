@@ -24,8 +24,8 @@ RUN "load.py data/$NAME/$SURF.csv --contours --barcode --save"
 # SAMPLE1="$DIR/$NAME/samples/$SURF-sample1824-45.csv"
 # SAMPLE2="$DIR/$NAME/samples/$SURF-sample474-106.csv"
 
-SAMPLE1="data/surf/samples/surf8-sample1008-61.csv"
-SAMPLE2="data/surf/samples/surf8-sample317-111.csv"
+SAMPLE1="data/surf/samples/surf8-sample1031-61.csv"
+SAMPLE2="data/surf/samples/surf8-sample340-111.csv"
 
 
 RUN "load.py data/$NAME/$SURF.csv --sample-file $SAMPLE1 --save --cover"

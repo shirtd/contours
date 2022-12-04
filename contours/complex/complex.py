@@ -17,7 +17,6 @@ class Element:
     def __getitem__(self, i):
         if i < len(self):
             return self.__atoms[i]
-        # print(f" ! atom index {i} out of range({len(self)})")
     def __call__(self, key):
         if key in self.data:
             return self.data[key]
@@ -137,7 +136,7 @@ class SimplicialComplex(Complex):
             s.data['min'] = (max if invert_min else min)(self[e].data['min'] for e in combinations(s,2))
 
 class DualComplex(CellComplex):
-    def __init__(self, K, B, verbose=False, desc='[ voronoi'):
+    def __init__(self, K, B, verbose=False, desc='voronoi'):
         CellComplex.__init__(self, K.dim)
         self.__dmap, self.__pmap = {}, {}
         self.__imap = {t : i for i,t in enumerate(K(K.dim))}

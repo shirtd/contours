@@ -92,3 +92,24 @@ parser.add_argument('--lips', action='store_true', help='plot lips')
 parser.add_argument('--nomin', action='store_true', help='max only')
 parser.add_argument('--nomax', action='store_true', help='min only')
 parser.add_argument('--noim', action='store_true', help='no image persistence')
+
+
+def get_tag(args, suffix=''):
+    tag = f"{args.key}{'' if args.noim else '-im'}"
+    if args.lips:
+        tag = f"{tag}-lips{'-max' if args.nomin else '-min' if args.nomax else ''}"
+        if args.local:
+            tag += '-local'
+    return f"{tag}{'-color' if args.color else ''}{suffix}"
+
+def set_args(args, sample):
+    args.parent = sample.parent if args.parent is None else args.parent
+    if args.key is None:
+        args.key = ( 'graph' if args.graph else 'rips' if args.rips
+                else 'delaunay' if args.delaunay else 'voronoi' if args.voronoi
+                else 'union' if args.union else 'cover' )
+    args.folder = os.path.join(args.folder, sample.parent, sample.name)
+    if args.lips:
+        args.folder = os.path.join(args.folder, 'lips')
+    args.folder = os.path.join(args.folder, args.key)
+    return get_tag(args)

@@ -3,42 +3,11 @@ import numpy as np
 import argparse
 import os, sys
 
-from contours.config import COLOR, KWARGS, parser
-from contours.surface import ScalarFieldFile, MetricSampleFile
+from contours.config import COLOR, COLORS, KWARGS, GAUSS_ARGS, get_config
+from contours.config.args import parser, get_tag, set_args
+
 from contours.complex import RipsComplex, DelaunayComplex, VoronoiComplex
-
-
-def get_tag(args, suffix=''):
-    tag = f"{args.key}{'' if args.noim else '-im'}"
-    if args.lips:
-        tag = f"{tag}-lips{'-max' if args.nomin else '-min' if args.nomax else ''}"
-        if args.local:
-            tag += '-local'
-    return f"{tag}{'-color' if args.color else ''}{suffix}"
-
-def set_args(args, sample):
-    args.parent = sample.parent if args.parent is None else args.parent
-    if args.key is None:
-        args.key = ( 'graph' if args.graph else 'rips' if args.rips
-                else 'delaunay' if args.delaunay else 'voronoi' if args.voronoi
-                else 'union' if args.union else 'cover' )
-    args.folder = os.path.join(args.folder, sample.parent, sample.name)
-    if args.lips:
-        args.folder = os.path.join(args.folder, 'lips')
-    args.folder = os.path.join(args.folder, args.key)
-    return get_tag(args)
-
-def get_config(args):
-    if args.lips:
-        if args.cover or args.union:
-            return {'min' : {**{'visible' : not args.nomin}, **KWARGS['min'][args.key]},
-                    'max' : {**{'visible' : not args.nomax}, **KWARGS['max'][args.key]}}
-        if args.sub_file is not None:
-            return {'min' : {**{'visible' : False}, **KWARGS['min'][args.key]},
-                    'max' : {**{'visible' : False}, **KWARGS['max'][args.key]}}
-        return {'min' : {**{'visible' : False, 'key' : 'min'}, **KWARGS['min'][args.key]},
-                'max' : {**{'visible' : False, 'key' : 'max'}, **KWARGS['max'][args.key]}}
-    return {'f' : {**{'visible' : False}, **KWARGS[args.key]}}
+from contours.surface import ScalarFieldFile, MetricSampleFile
 
 
 if __name__ == '__main__':
@@ -53,10 +22,11 @@ if __name__ == '__main__':
         if args.delaunay or args.voronoi:
             filter = None if args.alpha is None else (lambda f: f < args.alpha)
             complex = DelaunayComplex(sample.points, sample.radius, filter, verbose=True)
-            # print(args.alpha, sum(s.data['alpha'] for s in complex(1))/len(complex(1)))
             if args.voronoi:
-                # complex = VoronoiComplex(complex, complex.get_boundary(sample.extents), verbose=True)
-                complex = VoronoiComplex(complex, verbose=True)
+                complex.superlevels(sample)
+                # TODO boundary times out
+                boundary = [] # [s for s in complex if max(sample(v) for v in s) <= sample.cuts[0]]
+                complex = VoronoiComplex(complex, boundary, verbose=True)
         else:
             radius = sample.radius
             if not args.noim:
@@ -91,42 +61,26 @@ if __name__ == '__main__':
                 sample.plot_lips_filtration(get_config(args), tag, *plot_args)
             else:
                 sample.plot_cover_filtration(tag, *plot_args, **KWARGS[args.key])
-        elif args.rips or args.graph or args.delaunay:
+        elif args.rips or args.graph or args.delaunay or args.voronoi:
             config = get_config(args)
-            if args.lips:
-                if args.sub_file is None:
-                    sample.plot_rips_filtration(complex, config, tag, *plot_args)
-                else:
-                    hide = {'min'} if args.nomin else {'max'} if args.nomax else {}
-                    sample.plot_rips_filtration(complex, config, tag, *plot_args, subsample=subsample, hide=hide)
+            if args.lips and args.sub_file is not None:
+                hide = {'min'} if args.nomin else {'max'} if args.nomax else {}
+                sample.plot_complex_filtration(complex, config, tag, *plot_args, subsample=subsample, hide=hide)
             else:
-                sample.plot_rips_filtration(complex, config, tag, *plot_args)
-        elif args.voronoi:
-            print('todo: voronoi viz')
+                sample.plot_complex_filtration(complex, config, tag, *plot_args)
+
     else:
         fig, ax = sample.init_plot()
-        if args.sub_file is not None:
-            sample.plot(ax, **KWARGS['supsample'])
+        if args.cover or args.union:
+            sample.plot(ax, **KWARGS['sample'])
+            cover_plt = sample.plot_cover(ax, args.color, **KWARGS[args.key])
+        elif args.rips or args.graph or args.delaunay or args.voronoi:
+            complex_plt = sample.plot_complex(ax, complex, args.color, **KWARGS[args.key])
+        elif args.sub_file is not None:
+            sample.plot(ax, **KWARGS['sample'])
             subsample.plot(ax, plot_color=args.color, **KWARGS['subsample'])
         else:
             sample.plot(ax, **KWARGS['sample'])
-
-        # tag = f"{key}{color_str}" if args.cover or args.union or args.rips or args.graph else None
-        if args.cover or args.union:
-            cover_plt = sample.plot_cover(ax, args.color, **KWARGS[args.key])
-        elif args.rips or args.graph or args.delaunay:
-            rips_plt = sample.plot_rips(ax, complex, args.color, **KWARGS[args.key])
-        elif args.voronoi:
-            # TODO
-            print('todo: voronoi viz')
-            V = complex.P
-            ax.scatter(V[:,0], V[:,1], c='red', s=5)
-            # voronoi_plt = sample.plot_voronoi(ax, complex, args.color)
-            E = np.array([[V[v] for v in e] for e in complex(1) if len(e) == 2])
-            for e in E:
-                ax.plot(e[:,0], e[:,1], color='black')
-            # ax.plot(E[:,0], E[:,1])
-
 
         if args.save:
             sample.save_plot(args.folder, args.dpi, tag)

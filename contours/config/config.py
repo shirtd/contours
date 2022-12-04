@@ -1,6 +1,6 @@
 import numpy as np
 
-from contours.config import COLOR
+from contours.config import *
 
 
 LW=0.4
@@ -18,28 +18,28 @@ KWARGS = {  'barcode'   : { 'lw' : 10},
             'subsample' : { 'zorder' : 10, 's' : SIZE*2, 'color' : 'black'},
             'cover'     : { 'zorder' : 2, 'alpha' : 0.2, 'color' : COLOR['red'], 'lw' : 1},
             'union'     : { 'zorder' : 2, 'alpha' : 1, 'color' : COLOR['red1'], 'lw' : 1},
-            'graph'     : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0], 'lw' : LW},
-            'rips'      : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW},
-            'delaunay'  : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW},
-            'voronoi'   : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW},
-            'min'       : { 'graph'  : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0], 'lw' : LW},
-                            'rips'   : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW},
-                            'delaunay': { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW},
-                            'voronoi': { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW},
+            'graph'     : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0], 'lw' : LW, 's' : SIZE},
+            'rips'      : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW, 's' : SIZE},
+            'delaunay'  : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW, 's' : SIZE},
+            'voronoi'   : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW, 's' : SIZE/2},
+            'min'       : { 'graph'  : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0], 'lw' : LW, 's' : SIZE},
+                            'rips'   : { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW, 's' : SIZE},
+                            'delaunay': { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW, 's' : SIZE},
+                            'voronoi': { 'zorder' : 1, 'color' : COLOR['red'], 'fade' : [1, 0.8, 0.6], 'lw' : LW, 's' : SIZE/2},
                             'cover' : { 'zorder' : 2, 'alpha' : 0.2, 'color' : COLOR['red']},
                             'union' : { 'zorder' : 2, 'alpha' : 1, 'color' : COLOR['red1']}},
-            'max'       : { 'graph' : { 'zorder' : 1, 'color' : COLOR['blue'], 'fade' : [1, 0.8, 0], 'lw' : LW},
-                            'rips'  : { 'zorder' : 1, 'color' : COLOR['blue'], 'fade' : [1, 0.8, 0.6], 'lw' : LW},
-                            'delaunay': { 'zorder' : 1, 'color' : COLOR['blue'], 'fade' : [1, 0.8, 0.6], 'lw' : LW},
-                            'voronoi': { 'zorder' : 1, 'color' : COLOR['blue'], 'fade' : [1, 0.8, 0.6], 'lw' : LW},
+            'max'       : { 'graph' : { 'zorder' : 1, 'color' : COLOR['blue'], 'fade' : [1, 0.8, 0], 'lw' : LW, 's' : SIZE},
+                            'rips'  : { 'zorder' : 1, 'color' : COLOR['blue'], 'fade' : [1, 0.8, 0.6], 'lw' : LW, 's' : SIZE},
+                            'delaunay': { 'zorder' : 1, 'color' : COLOR['blue'], 'fade' : [1, 0.8, 0.6], 'lw' : LW, 's' : SIZE},
+                            'voronoi': { 'zorder' : 1, 'color' : COLOR['blue'], 'fade' : [1, 0.8, 0.6], 'lw' : LW, 's' : SIZE/2},
                             'cover' : { 'zorder' : 2, 'alpha' : 0.2, 'color' : COLOR['blue']},
                             'union' : { 'zorder' : 2, 'alpha' : 1, 'color' : COLOR['blue1']}}}
 
 
 #                     (weight,  [xpos, ypos],   [xspread, yspread])
-GAUSSES = {'original': [(1,     [-0.2, 0.2],    [0.3, 0.3]),    # base
+GAUSSES = {'original': [(0.9,     [-0.2, 0.2],    [0.3, 0.3]),    # base
                         (0.5,   [-1.3, -0.1],   [0.15, 0.15]),  # small feature
-                        (0.7,   [-0.8, -0.4],   [0.2, 0.2]),    # main feature 1
+                        (0.6,   [-0.8, -0.4],   [0.2, 0.2]),    # main feature 1
                         (0.8,   [-0.8, -0],     [0.4, 0.4]),    # main feature 2
                         (0.25,  [0.6, 0.0],     [0.4, 0.2]),    # bridge
                         (0.8,   [1.25, 0.3],    [0.27, 0.25])], # minor feature
@@ -72,7 +72,7 @@ GAUSS_ARGS = {  'pad' : 1.5,
                 'scale' : 1000,
                 # 'lips' : 3.155422091834973,
                 # 'lips' : 3.155422091834973,
-                'lips' : 3.,
+                # 'lips' : 3.,
                 'extents' : [[-2, 2], [-1, 1]],
                 # # 'cuts' : [0.05, 0.3, 0.55, 0.8, 1.35],
                 # # 'colors' : [COLOR[c] for c in ['green', 'blue', 'purple', 'yellow']],
@@ -83,6 +83,18 @@ GAUSS_ARGS = {  'pad' : 1.5,
                 # # TODO!
                 # 'cuts' : [0.05, 0.2, 0.55, 0.85, 1., 1.1],
                 # 'gauss_args' : GAUSSES['original0']}
+
+def get_config(args):
+    if args.lips:
+        if args.cover or args.union:
+            return {'min' : {**{'visible' : not args.nomin}, **KWARGS['min'][args.key]},
+                    'max' : {**{'visible' : not args.nomax}, **KWARGS['max'][args.key]}}
+        if args.sub_file is not None:
+            return {'min' : {**{'visible' : False}, **KWARGS['min'][args.key]},
+                    'max' : {**{'visible' : False}, **KWARGS['max'][args.key]}}
+        return {'min' : {**{'visible' : False, 'key' : 'min'}, **KWARGS['min'][args.key]},
+                'max' : {**{'visible' : False, 'key' : 'max'}, **KWARGS['max'][args.key]}}
+    return {'f' : {**{'visible' : False}, **KWARGS[args.key]}}
 
 # CONFIG = {  'surf32' :    {'res' : 32, 'shape' : (2,1), 'pad' : (1.2, 1.55),
 #                         'cuts' : [0.05, 0.3, 0.55, 0.8, 1.35],
