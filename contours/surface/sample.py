@@ -6,7 +6,7 @@ import os, json
 from ..config import COLOR, KWARGS
 from ..data import Data, DataFile, Function, PointCloud
 from ..util import lmap, format_float
-from ..complex import RipsComplex
+from ..complex import RipsComplex, DelaunayComplex, VoronoiComplex
 from ..persistence import Diagram, Filtration
 from ..util.grid import lipschitz_grid
 from ..util.geometry import coords_to_meters, greedysample
@@ -53,23 +53,21 @@ class MetricSample(Sample):
             balls.append(s)
             ax.add_patch(s)
         return balls
-    def plot_complex(self, ax, complex, plot_colors=False, key=None, color=COLOR['red'], **kwargs):
-        if plot_colors and key is not None:
+    def get_rips(self, noim=False, verbose=True):
+        radius = self.radius * (1 if noim else 2/np.sqrt(3))
+        return RipsComplex(self.points, radius, verbose=verbose)
+    def get_delaunay(self, alpha=2e4, verbose=True):
+        filter = None if alpha is None else (lambda f: f < alpha)
+        return DelaunayComplex(self.points, self.radius, filter, verbose=verbose)
+    def get_voronoi(self, alpha=2e4, verbose=True):
+        delaunay = self.get_delaunay(alpha, verbose)
+        return VoronoiComplex(delaunay, delaunay.get_boundary(), verbose=verbose)
+    def plot_complex(self, ax, complex, plot_colors=False, key='sub', color=COLOR['red'], **kwargs):
+        if plot_colors:
             kwargs['tri_colors'] = [self.colors[self.get_cut(t.data[key])] for t in complex(2)]
         else:
             kwargs['color'] = color
         return complex.plot(ax, **kwargs)
-    # def plot_rips(self, ax, rips, plot_colors=False, color=COLOR['red'], key=None, **kwargs):
-    #     if plot_colors:
-    #         if key is None:
-    #             kwargs['tri_colors'] = [self.colors[self.get_cut(self(t).max())] for t in rips(2)]
-    #         else:
-    #             kwargs['tri_colors'] = [self.colors[self.get_cut(t.data[key])] for t in rips(2)]
-    #     else:
-    #         kwargs['color'] = color
-    #     return complex.plot(ax, **kwargs)
-    # def plot_voronoi(self, ax, complex, plot_colors=False, **kwargs):
-    #     return complex.plot(ax, **kwargs)
 
 
 class MetricSampleData(MetricSample, Data):
@@ -80,13 +78,13 @@ class MetricSampleData(MetricSample, Data):
         MetricSample.__init__(self, data[:,:2], data[:,2], **config)
     def smooth(self, p):
         return [p[0]+self.config['lips']*self.radius/OOPS, p[1]-self.config['lips']*self.radius/OOPS]
-    def plot_complex_filtration(self, complex, config, tag=None, show=True, save=True, folder='figures', plot_colors=False, dpi=300, subsample=None, hide={}):
+    def plot_complex_filtration(self, complex, config, tag=None, show=True, save=True, folder='figures', plot_colors=False, dpi=300, hide={}, subsample=None):
         fig, ax = self.init_plot()
         if not (subsample is None or 'subsample' in hide):
             subsample.plot(ax, plot_color=plot_colors, **KWARGS['subsample'])
             if plot_colors:
                 subsample.plot(ax, zorder=10, s=10, facecolor='none', edgecolor='black', lw=0.3)
-        do_color = {'min' : False if not 'max' in hide else plot_colors, 'max' : plot_colors, "f" : plot_colors}
+        do_color = {'min' : False if not 'max' in hide else plot_colors, 'max' : plot_colors, "sub" : plot_colors}
         complex_plt = {k : self.plot_complex(ax, complex, do_color[k], k, **v) for k,v in config.items() if not k in hide}
         for i, t in enumerate(self.get_levels()):
             for d, S in complex.items():
@@ -129,11 +127,11 @@ class MetricSampleData(MetricSample, Data):
         plt.close(fig)
     def plot_barcode(self, rips, show=False, save=False, folder='./', _color=None, dpi=300, smooth=True, sep='_', relative=False, **kwargs):
         fig, ax = init_barcode()
-        filt = Filtration(rips, 'f')
+        filt = Filtration(rips, 'sub')
         if rips.thresh > self.radius:
-            pivot = Filtration(rips, 'f', filter=lambda s: s['dist'] <= self.radius)
+            pivot = Filtration(rips, 'sub', filter=lambda s: s['dist'] <= self.radius)
         else:
-            pivot = Filtration(rips, 'f')
+            pivot = Filtration(rips, 'sub')
         hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
         dgms = hom.get_diagram(rips, filt, pivot, self.smooth if smooth else None)
         barode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
@@ -178,54 +176,6 @@ class MetricSampleData(MetricSample, Data):
         if show: plt.show()
         plt.close(fig)
         return dgms
-    # def plot_rips_filtration(self, rips, config, tag=None, show=True, save=True, folder='figures', plot_colors=False, dpi=300, subsample=None, hide={}):
-    #     fig, ax = self.init_plot()
-    #     if subsample is None and not 'sample' in hide:
-    #         self.plot(ax, **KWARGS['sample'])
-    #     else:
-    #         if not 'sample' in hide:
-    #             self.plot(ax, **KWARGS['supsample'])
-    #         if not 'subsample' in hide:
-    #             subsample.plot(ax, plot_color=plot_colors, **KWARGS['subsample'])
-    #             if plot_colors:
-    #                 subsample.plot(ax, zorder=10, s=10, facecolor='none', edgecolor='black', lw=0.3)
-    #     do_color = {'min' : False if not 'max' in hide else plot_colors, 'max' : plot_colors, "f" : plot_colors}
-    #     rips_plt = {k : self.plot_rips(ax, rips, do_color[k], **v) for k,v in config.items() if not k in hide}
-    #     for i, t in enumerate(self.get_levels()):
-    #         for d in (1,2):
-    #             for s in rips(d):
-    #                 for k, v in rips_plt.items():
-    #                     if s.data[k] <= t:
-    #                         v[d][s].set_visible(not config[k]['visible'])
-    #         if show:
-    #             plt.pause(0.5)
-    #         if save:
-    #             self.save_plot(folder, dpi, f"{tag}{format_float(t)}")
-    #     plt.close(fig)
-    # def plot_voronoi_filtration(self, complex, config, tag=None, show=True, save=True, folder='figures', plot_colors=False, dpi=300, subsample=None, hide={}):
-    #     fig, ax = self.init_plot()
-    #     if subsample is None and not 'sample' in hide:
-    #         self.plot(ax, **KWARGS['sample'])
-    #     else:
-    #         if not 'sample' in hide:
-    #             self.plot(ax, **KWARGS['supsample'])
-    #         if not 'subsample' in hide:
-    #             subsample.plot(ax, plot_color=plot_colors, **KWARGS['subsample'])
-    #             if plot_colors:
-    #                 subsample.plot(ax, zorder=10, s=10, facecolor='none', edgecolor='black', lw=0.3)
-    #     do_color = {'min' : False if not 'max' in hide else plot_colors, 'max' : plot_colors, "f" : plot_colors}
-    #     complex_plt = {k : self.plot_voronoi(ax, complex, do_color[k], **v) for k,v in config.items() if not k in hide}
-    #     for i, t in enumerate(self.get_levels()):
-    #         for d in (0,1,2):
-    #             for s in complex(d):
-    #                 for k, v in complex_plt.items():
-    #                     if s.data[k] <= t and s in v[d]:
-    #                         v[d][s].set_visible(not config[k]['visible'])
-    #         if show:
-    #             plt.pause(0.5)
-    #         if save:
-    #             self.save_plot(folder, dpi, f"{tag}{format_float(t)}")
-    #     plt.close(fig)
 
 class MetricSampleFile(MetricSampleData, DataFile):
     def __init__(self, file_name, json_file=None, radius=None):

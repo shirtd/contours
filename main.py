@@ -6,8 +6,33 @@ import os, sys
 from contours.config import COLOR, COLORS, KWARGS, GAUSS_ARGS, get_config
 from contours.config.args import parser, get_tag, set_args
 
-from contours.complex import RipsComplex, DelaunayComplex, VoronoiComplex
+
 from contours.surface import ScalarFieldFile, MetricSampleFile
+
+def do_cover(args, sample, tag, subsample=None):
+    plot_args = [args.show, args.save, args.folder, args.color, args.dpi]
+    if args.cover or args.union:
+        return sample.plot_lips_filtration(get_config(args), tag, *plot_args)
+    return sample.plot_cover_filtration(tag, *plot_args, **KWARGS[args.mode])
+
+def do_contours(args, complex, tag, subsample=None):
+    plot_args = [args.show, args.save, args.folder, args.color, args.dpi]
+    if args.lips:
+        plot_args += [{'min'} if args.nomin else {'max'} if args.nomax else {}]
+        if subsample is not None:
+            plot_args += [subsample]
+    return sample.plot_complex_filtration(complex, get_config(args), tag, *plot_args)
+
+def do_barcode(args, complex, tag, subsample=None):
+    plot_args = [args.show, args.save, args.folder, args.color, args.dpi]
+    if args.nosmooth:
+        tag += '-nosmooth'
+        plot_args += [not args.nosmooth]
+    if args.lips:
+        if subsample is not None:
+            return sample.plot_lips_sub_barcode(complex, subsample, *plot_args, **KWARGS['barcode'])
+        return sample.plot_lips_barcode(complex, *plot_args, **KWARGS['barcode'])
+    return sample.plot_barcode(complex, *plot_args, **KWARGS['barcode'])
 
 
 if __name__ == '__main__':
@@ -15,72 +40,40 @@ if __name__ == '__main__':
 
     sample = MetricSampleFile(args.file)
     tag = set_args(args, sample)
-    if args.sub_file is not None:
+
+    subsample = None
+    if args.lips and args.sub_file is not None:
         subsample = MetricSampleFile(args.sub_file)
-        tag = f'{tag}-{len(subsample)}subsample'
-    if args.rips or args.graph or args.delaunay or args.voronoi or args.barcode:
-        if args.delaunay or args.voronoi:
-            filter = None if args.alpha is None else (lambda f: f < args.alpha)
-            complex = DelaunayComplex(sample.points, sample.radius, filter, verbose=True)
-            if args.voronoi:
-                complex.superlevels(sample)
-                # TODO boundary times out
-                boundary = [] # [s for s in complex if max(sample(v) for v in s) <= sample.cuts[0]]
-                complex = VoronoiComplex(complex, boundary, verbose=True)
-        else:
-            radius = sample.radius
-            if not args.noim:
-                radius *= 2 / np.sqrt(3)
-            complex = RipsComplex(sample.points, radius, verbose=True)
+        tag = f'{tag}-{len(subsample)}sub'
+
+    complex = None
+    if args.rips or args.graph:
+        complex = sample.get_rips(args.noim)
+    elif args.delaunay:
+        complex = sample.get_delaunay(args.alpha)
+    elif args.voronoi:
+        complex = sample.get_voronoi(args.alpha)
+
+
+    if complex is None and args.contours:
+        do_cover(args, sample, tag, subsample)
+    else:
         if args.lips:
             if args.sub_file is not None:
-                complex.lips_sub(subsample, args.local)
-            elif not args.voronoi:
-                complex.lips(sample, sample.config['lips'], invert_min=True)
+                complex.lips_sub(subsample)
             else:
-                print("! can't do lips on voronoi")
-        elif not args.voronoi:
+                complex.lips(sample, sample.config['lips'], invert_min=True)
+        else:
             complex.sublevels(sample)
 
-    plot_args = [args.show, args.save, args.folder, args.color, args.dpi]
+        if args.barcode:
+            do_barcode(args, sample, tag, subsample)
 
-    if args.barcode:
-        if args.nosmooth:
-            tag += '-nosmooth'
-        if args.lips:
-            if args.sub_file is not None:
-                sample_dgms = sample.plot_lips_sub_barcode(complex, subsample, *plot_args, smooth=not args.nosmooth, **KWARGS['barcode'])
-            else:
-                sample_dgms = sample.plot_lips_barcode(complex, *plot_args, smooth=not args.nosmooth, **KWARGS['barcode'])
-        else:
-            sample_dgms = sample.plot_barcode(complex, *plot_args, smooth=not args.nosmooth, **KWARGS['barcode'])
+        if args.contours:
+            do_contours(args, complex, tag, subsample)
 
-    if args.contours:
-        if args.cover or args.union:
-            if args.lips:
-                sample.plot_lips_filtration(get_config(args), tag, *plot_args)
-            else:
-                sample.plot_cover_filtration(tag, *plot_args, **KWARGS[args.key])
-        elif args.rips or args.graph or args.delaunay or args.voronoi:
-            config = get_config(args)
-            if args.lips and args.sub_file is not None:
-                hide = {'min'} if args.nomin else {'max'} if args.nomax else {}
-                sample.plot_complex_filtration(complex, config, tag, *plot_args, subsample=subsample, hide=hide)
-            else:
-                sample.plot_complex_filtration(complex, config, tag, *plot_args)
-
-    else:
         fig, ax = sample.init_plot()
-        if args.cover or args.union:
-            sample.plot(ax, **KWARGS['sample'])
-            cover_plt = sample.plot_cover(ax, args.color, **KWARGS[args.key])
-        elif args.rips or args.graph or args.delaunay or args.voronoi:
-            complex_plt = sample.plot_complex(ax, complex, args.color, **KWARGS[args.key])
-        elif args.sub_file is not None:
-            sample.plot(ax, **KWARGS['sample'])
-            subsample.plot(ax, plot_color=args.color, **KWARGS['subsample'])
-        else:
-            sample.plot(ax, **KWARGS['sample'])
+        complex_plt = sample.plot_complex(ax, complex, args.color, **KWARGS[args.mode])
 
         if args.save:
             sample.save_plot(args.folder, args.dpi, tag)
@@ -88,3 +81,24 @@ if __name__ == '__main__':
         if args.show:
             print('close plot to exit')
             plt.show()
+
+
+    # else:
+    #     fig, ax = sample.init_plot()
+    #     if args.cover or args.union:
+    #         sample.plot(ax, **KWARGS['sample'])
+    #         cover_plt = sample.plot_cover(ax, args.color, **KWARGS[args.mode])
+    #     elif args.rips or args.graph or args.delaunay or args.voronoi:
+    #         complex_plt = sample.plot_complex(ax, complex, args.color, **KWARGS[args.mode])
+    #     elif args.sub_file is not None:
+    #         sample.plot(ax, **KWARGS['sample'])
+    #         subsample.plot(ax, plot_color=args.color, **KWARGS['subsample'])
+    #     else:
+    #         sample.plot(ax, **KWARGS['sample'])
+    #
+    #     if args.save:
+    #         sample.save_plot(args.folder, args.dpi, tag)
+    #
+    #     if args.show:
+    #         print('close plot to exit')
+    #         plt.show()

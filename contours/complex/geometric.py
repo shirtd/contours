@@ -33,8 +33,8 @@ class EmbeddedComplex(Complex):
         return {0 : self.plot_vertices(ax, visible, alpha=alpha*fade[0], zorder=zorder+2, s=s, color='black'),
                 1 : self.plot_edges(ax, visible, alpha=alpha*fade[1], zorder=zorder+1, lw=lw, **edge_kw),
                 2 : self.plot_polys(ax, visible, alpha=alpha*fade[2], zorder=zorder, **tri_kw)}
-    def get_boundary(self, bounds):
-        out = {s for s in self(self.dim) if not self.in_bounds(s, bounds)}
+    def get_boundary(self):
+        out = {e for e in self(1) if len(self.cofaces(e)) < 2}
         return {f for s in out for f in self.closure(s)}
     def in_bounds(self, s, bounds):
         pass
@@ -60,7 +60,7 @@ class VoronoiComplex(DualComplex, EmbeddedComplex):
         P = circumcenter(K.P[K(K.dim)])
         EmbeddedComplex.__init__(self, P)
         DualComplex.__init__(self, K, B, verbose)
-        self.nbrs = {i : set() for i,_ in enumerate(self(0))}
+        self.nbrs = {s[0] : set() for s in self(0)}
         for e in self(1):
             if len(e) == 2:
                 if e[0] in self.nbrs and e[1] in self.nbrs:

@@ -37,10 +37,10 @@ KWARGS = {  'barcode'   : { 'lw' : 10},
 
 
 #                     (weight,  [xpos, ypos],   [xspread, yspread])
-GAUSSES = {'original': [(0.9,     [-0.2, 0.2],    [0.3, 0.3]),    # base
-                        (0.5,   [-1.3, -0.1],   [0.15, 0.15]),  # small feature
-                        (0.6,   [-0.8, -0.4],   [0.2, 0.2]),    # main feature 1
-                        (0.8,   [-0.8, -0],     [0.4, 0.4]),    # main feature 2
+GAUSSES = {'original': [(0.85,     [-0.25, 0.1],    [0.3, 0.3]),    # base
+                        (0.6,   [-1.35, -0.1],   [0.15, 0.15]),  # small feature
+                        (0.65,   [-0.85, -0.35],   [0.2, 0.2]),    # main feature 1
+                        (0.75,   [-0.8, -0],     [0.4, 0.4]),    # main feature 2
                         (0.25,  [0.6, 0.0],     [0.4, 0.2]),    # bridge
                         (0.8,   [1.25, 0.3],    [0.27, 0.25])], # minor feature
            'original0':[(0.8,   [-0.2, 0.2],    [0.3, 0.3]),    # main feature
@@ -87,14 +87,14 @@ GAUSS_ARGS = {  'pad' : 1.5,
 def get_config(args):
     if args.lips:
         if args.cover or args.union:
-            return {'min' : {**{'visible' : not args.nomin}, **KWARGS['min'][args.key]},
-                    'max' : {**{'visible' : not args.nomax}, **KWARGS['max'][args.key]}}
+            return {'min' : {**{'visible' : not args.nomin}, **KWARGS['min'][args.mode]},
+                    'max' : {**{'visible' : not args.nomax}, **KWARGS['max'][args.mode]}}
         if args.sub_file is not None:
-            return {'min' : {**{'visible' : False}, **KWARGS['min'][args.key]},
-                    'max' : {**{'visible' : False}, **KWARGS['max'][args.key]}}
-        return {'min' : {**{'visible' : False, 'key' : 'min'}, **KWARGS['min'][args.key]},
-                'max' : {**{'visible' : False, 'key' : 'max'}, **KWARGS['max'][args.key]}}
-    return {'f' : {**{'visible' : False}, **KWARGS[args.key]}}
+            return {'min' : {**{'visible' : False}, **KWARGS['min'][args.mode]},
+                    'max' : {**{'visible' : False}, **KWARGS['max'][args.mode]}}
+        return {'min' : {**{'visible' : False}, **KWARGS['min'][args.mode]},
+                'max' : {**{'visible' : False}, **KWARGS['max'][args.mode]}}
+    return {'sub' : {**{'visible' : False}, **KWARGS[args.mode]}}
 
 # CONFIG = {  'surf32' :    {'res' : 32, 'shape' : (2,1), 'pad' : (1.2, 1.55),
 #                         'cuts' : [0.05, 0.3, 0.55, 0.8, 1.35],

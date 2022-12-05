@@ -12,8 +12,6 @@ from contours.surface.sample import MetricSampleFile
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    # args.greedyfun = True
-
     if args.gauss:
         name, folder = 'surf', os.path.join('data', 'surf')
         surf = GaussianScalarFieldData(name, folder, args.resolution, args.downsample, **GAUSS_ARGS)
@@ -52,7 +50,7 @@ if __name__ == '__main__':
         if args.color:
             surf_plt['contours'].set_alpha(0.1)
             surf_plt['surface'].set_alpha(0.1)
-            sample.plot(ax, plot_color=True, **KWARGS['subsample']) # zorder=9, s=10)
+            sample.plot(ax, plot_color=True, **KWARGS['subsample'])
             sample.plot(ax, zorder=10, s=10, facecolor='none', edgecolor='black', lw=0.3)
         else:
             sample.plot(ax, **KWARGS['sample'])

@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.linalg as la
+from itertools import combinations
 
 from ..util import stuple, tqit
 
@@ -90,24 +91,16 @@ class Complex:
         return {s}.union({f for t in self.faces(s) for f in self.closure(t)})
     def __repr__(self):
         return ''.join(['%d:\t%d elements\n' % (d, len(self(d))) for d in range(self.dim+1)])
-    def sublevels(self, sample, key='f', verbose=False):
-        try:
-            for s in tqit(self, verbose, 'sub'):
-                s.data[key] = sample(s).max()
-        except IndexError as e:
-            print(s,tuple(s), s.key())
-            raise(e)
-    def superlevels(self, sample, key='f', verbose=False):
+    def sublevels(self, sample, key='sub', verbose=False):
+        for s in tqit(self, verbose, 'sub'):
+            s.data[key] = sample(s).max()
+    def superlevels(self, sample, key='sup', verbose=False):
         for s in tqit(self, verbose, 'sup'):
             s.data[key] = sample(s).min()
-    def lips_sub(self, subsample, local=False):
-        if local:
-            constants = subsample.constants
-        else:
-            constants = np.ones(len(subsample)) * subsample.config['lips']
+    def lips_sub(self, subsample):
         for p, s in zip(self.P, self(0)):
-            s.data['max'] = min(f + c*la.norm(p - q) for q, f, c in zip(subsample, subsample.function, constants))
-            s.data['min'] = max(f - c*la.norm(p - q) for q, f, c in zip(subsample, subsample.function, constants))
+            s.data['max'] = min(f + subsample.config['lips']*la.norm(p - q) for q, f, c in zip(subsample, subsample.function, constants))
+            s.data['min'] = max(f - subsample.config['lips']*la.norm(p - q) for q, f, c in zip(subsample, subsample.function, constants))
         for s in self(1)+self(2):
             s.data['max'] = max(self(0)[v].data['max'] for v in s)
             s.data['min'] = max(self(0)[v].data['min'] for v in s)
@@ -137,6 +130,7 @@ class SimplicialComplex(Complex):
 
 class DualComplex(CellComplex):
     def __init__(self, K, B, verbose=False, desc='voronoi'):
+        self.K, self.B = K, B
         CellComplex.__init__(self, K.dim)
         self.__dmap, self.__pmap = {}, {}
         self.__imap = {t : i for i,t in enumerate(K(K.dim))}
@@ -159,6 +153,12 @@ class DualComplex(CellComplex):
         return self.__dmap[s]
     def primal(self, ds):
         return self.__pmap[ds]
+    def sublevels(self, sample, key='sub', verbose=False):
+        for s in tqit(self, verbose, 'sub'):
+            s.data[key] = sample(self.primal(s)).min()
+    def superlevels(self, sample, key='sup', verbose=False):
+        for s in tqit(self, verbose, 'sup'):
+            s.data[key] = sample(self.primal(s)).max()
 
 # class DelaunayComplex(SimplicialComplex):
 #     def __init__(self, P):

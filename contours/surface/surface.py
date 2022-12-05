@@ -54,7 +54,7 @@ class Surface(Function, PointCloud):
         error = np.sqrt(dx**2 + dy**2) / mult
         return int(np.ceil(radius + error))
     def greedy_sample(self, thresh, mult, seed=None, greedyfun=False, config=None, noise=None):
-        data = self.get_data()[self.function > self.cuts[0]-thresh*self.lips]
+        data = self.get_data()[self.function > self.cuts[0]]
         if seed is None:
             seed = np.random.randint(len(data))
             print(f'SEED: {seed}')

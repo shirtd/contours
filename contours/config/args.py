@@ -27,7 +27,7 @@ DPI=250
 PAD=1e2
 LIPS=None
 THRESH=None # PAD
-ALPHA=None # 2e8 # None # 2e4
+ALPHA=2e4 # 2e8 # None # 2e4
 
 
 # PARSE
@@ -37,7 +37,7 @@ parser.add_argument('file', nargs='?', help='surface file')
 parser.add_argument('--gauss', action='store_true', help='generate gaussian surface')
 parser.add_argument('--downsample', default=None, type=int, help='downsample')
 parser.add_argument('--resolution', default=1024, type=int, help='resolution')
-parser.add_argument('--key', '-k', default=None, type=str, help='program key')
+parser.add_argument('--mode', '-m', default=None, type=str, help='program mode')
 parser.add_argument('--parent', default=None, help='sample parent (supersample)')
 parser.add_argument('--seed', default=None, type=int, help='sample seed')
 
@@ -78,6 +78,7 @@ parser.add_argument('--sub-file', default=None, help='sample file')
 # parser.add_argument('--show', action='store_true', help='show plot')
 # parser.add_argument('--save', action='store_true', help='save plot')
 
+# parser.add_argument('--key', '-k', default=None, type=str, help='filtration key')
 parser.add_argument('--contours', action='store_true', help='plot contours')
 parser.add_argument('--cover', action='store_true', help='plot cover')
 parser.add_argument('--color', action='store_true', help='plot color')
@@ -95,7 +96,7 @@ parser.add_argument('--noim', action='store_true', help='no image persistence')
 
 
 def get_tag(args, suffix=''):
-    tag = f"{args.key}{'' if args.noim else '-im'}"
+    tag = f"{args.mode}{'' if args.noim else '-im'}"
     if args.lips:
         tag = f"{tag}-lips{'-max' if args.nomin else '-min' if args.nomax else ''}"
         if args.local:
@@ -104,12 +105,12 @@ def get_tag(args, suffix=''):
 
 def set_args(args, sample):
     args.parent = sample.parent if args.parent is None else args.parent
-    if args.key is None:
-        args.key = ( 'graph' if args.graph else 'rips' if args.rips
+    if args.mode is None:
+        args.mode = ( 'graph' if args.graph else 'rips' if args.rips
                 else 'delaunay' if args.delaunay else 'voronoi' if args.voronoi
                 else 'union' if args.union else 'cover' )
     args.folder = os.path.join(args.folder, sample.parent, sample.name)
     if args.lips:
         args.folder = os.path.join(args.folder, 'lips')
-    args.folder = os.path.join(args.folder, args.key)
+    args.folder = os.path.join(args.folder, args.mode)
     return get_tag(args)

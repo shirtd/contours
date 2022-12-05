@@ -25,7 +25,7 @@ def is_boundary(p, d, l):
     return not all(d < c < u - d for c,u in zip(p, l))
 
 def to_path(vertices, nbrs):
-    V = vertices.copy()
+    V = {v for v in vertices if v in nbrs}
     cur = V.pop()
     path = [cur]
     while len(V):
@@ -54,13 +54,3 @@ def sfa_dio(f, min_cut=None, inf=-0.1, relative=False):
         hom = dio.homology_persistence(filt)
     dgms = dio.init_diagrams(hom, filt)
     return [np.array([[p.birth, p.death if p.death < np.inf else inf] for p in d]) if len(d) else np.ndarray((0,2)) for d in dgms]
-
-# def to_path(vertices, nbrs):
-#     V = vertices.copy()
-#     cur = V.pop()
-#     path = [cur]
-#     while len(V):
-#         cur = nbrs[cur].intersection(V).pop()
-#         path.append(cur)
-#         V.remove(cur)
-#     return path
