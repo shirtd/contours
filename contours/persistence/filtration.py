@@ -35,3 +35,12 @@ class Filtration:
         return {i : self.as_cochain(K, i, pivot) for i in rng}
     def get_matrix(self, K, rng, coh=False, pivot=None):
         return (self.get_cochains if coh else self.get_chains)(K, rng, pivot)
+
+class FiltrationMap:
+    def __init__(self, L, K, map):
+        self.L, self.K, self.map = L, K, map
+        self.matrix = np.zeros((len(K),len(L)), dtype=int)
+        for i,s in enumerate(L):
+            self.matrix[K.index(self(s))] = 1
+    def __call__(self, s):
+        return self.map[s]
