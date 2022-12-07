@@ -169,8 +169,8 @@ class DualComplex(CellComplex):
             s.data['min'] = max(sample(v) - constant * dist for v in ds)
         # TODO not right; try --contours --voronoi --nomax with dist/=2
         for s in self(1):
-            s.data['max'] = min(v.data['max'] for v in self.faces(s))
-            s.data['min'] = max(v.data['min'] for v in self.faces(s))
+            s.data['max'] = max(v.data['max'] for v in self.cofaces(s))
+            s.data['min'] = min(v.data['min'] for v in self.cofaces(s))
             # s.data['max'] = (min if invert_min else max)(v.data['max'] for v in self.faces(s))
 
 # class DelaunayComplex(SimplicialComplex):

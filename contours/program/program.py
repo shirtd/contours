@@ -115,6 +115,9 @@ class RunSample:
             if self.sub_file is not None:
                 return {'min' : {**{'visible' : False}, **KWARGS['min'][self.mode]},
                         'max' : {**{'visible' : False}, **KWARGS['max'][self.mode]}}
+            elif self.voronoi:
+                return {'min' : {**{'visible' : False}, **KWARGS['min'][self.mode]},
+                        'max' : {**{'visible' : True}, **KWARGS['max'][self.mode]}}
             return {'min' : {**{'visible' : True}, **KWARGS['min'][self.mode]},
                     'max' : {**{'visible' : False}, **KWARGS['max'][self.mode]}}
         return {'sub' : {**{'visible' : False}, **KWARGS[self.mode]}}
