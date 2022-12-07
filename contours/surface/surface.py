@@ -25,13 +25,7 @@ class Surface(Function, PointCloud):
         self.tree = KDTree(self.points)
     def get_data(self):
         return np.vstack([self.points.T, self.surface.flatten()]).T
-    def init_plot(self):
-        return init_surface(self.extents, self.pad)
-    def plot(self, ax, zorder=0, **kwargs):
-        return {'surface' : ax.contourf(*self.grid, self.surface, levels=self.cuts, colors=self.colors, zorder=zorder, **kwargs),
-                'contours' : ax.contour(*self.grid, self.surface, levels=self.cuts[1:], colors=self.colors[1:], zorder=zorder+1)}
-    def plot_barcode(self, name, show=False, save=False, folder='./', dpi=300, sep='_', **kwargs):
-        fig, ax = init_barcode()
+    def get_barcode(self):
         filt = dio.fill_freudenthal(self.surface)
         def f(s):
             if s.dimension() == 0:
@@ -39,12 +33,13 @@ class Surface(Function, PointCloud):
             return min(self(i) for i in s) > self.cuts[0]
         filt = dio.Filtration([s for s in filt if f(s)])
         hom = dio.homology_persistence(filt)
-        dgms = init_diagrams(hom, filt)
-        barcode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
-        if save: self.save_plot(folder, dpi, "barcode", sep)
-        if show: plt.show()
-        plt.close(fig)
-        return dgms
+        return init_diagrams(hom, filt)
+    def init_plot(self):
+        return init_surface(self.extents, self.pad)
+    def plot(self, ax, zorder=0, **kwargs):
+        return {'surface' : ax.contourf(*self.grid, self.surface, levels=self.cuts, colors=self.colors, zorder=zorder, **kwargs),
+                'contours' : ax.contour(*self.grid, self.surface, levels=self.cuts[1:], colors=self.colors[1:], zorder=zorder+1)}
+
     def get_radius(self, points, radius, mult=3):
         T = KDTree(points)
         data = self.get_data()[self.function > self.cuts[0]]
@@ -103,8 +98,6 @@ class ScalarFieldData(ScalarField, Data):
         config = {'extents' : extents, 'cuts' : cuts, 'colors' : colors, 'pad' : pad, 'lips' : lips}
         ScalarField.__init__(self, surface, **config)
         Data.__init__(self, surface, name, folder, config)
-    def plot_barcode(self, *args, **kwargs):
-        return Surface.plot_barcode(self, self.name, *args, **kwargs)
     def plot_contours(self, show=True, save=False, folder='figures', dpi=300, pad=0, off_alpha=0.1):
         fig, ax = self.init_plot()
         surf_plt = self.plot(ax)

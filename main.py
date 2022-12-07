@@ -7,41 +7,31 @@ from contours.config import COLOR, COLORS, KWARGS
 from contours.config.args import parser
 
 from contours.surface import ScalarFieldFile, MetricSampleFile
-from contours.program import MainArgs
+from contours.program import RunSample
 
 
 if __name__ == '__main__':
-    args = MainArgs(parser)
+    args = RunSample(parser)
 
     sample = MetricSampleFile(args.file)
     args.set_args(sample)
-    tag = args.get_tag()
-
-    subsample = None
-    if args.lips and args.sub_file is not None:
-        subsample = MetricSampleFile(args.sub_file)
-        tag = f'{tag}-{len(subsample)}sub'
 
     complex = args.get_complex(sample)
+    subsample = args.get_subsample()
 
-    if complex is None and args.contours:
-        args.do_cover(sample, tag, subsample)
-    else:
+    if args.contours:
+        args.plot_contours(sample, complex, subsample)
+
+    if args.barcode:
         if args.lips:
-            if args.sub_file is not None:
-                complex.lips_sub(subsample)
-            else:
-                complex.lips(sample, sample.config['lips'], invert_min=True)
+            barcode = sample.get_barcode(complex, not args.nosmooth, 'min', 'max')
         else:
-            complex.sublevels(sample)
+            barcode = sample.get_barcode(complex, not args.nosmooth)
+        args.plot_barcode(sample, barcode, **KWARGS['barcode'])
 
-        if args.barcode:
-            args.do_barcode(sample, tag, subsample)
+    if complex is not None:
+        args.plot_complex(sample, complex)
 
-        if args.contours:
-            args.do_contours(sample, complex, tag, subsample)
-
-        args.plot_complex(sample, complex, tag)
 
     # else:
     #     fig, ax = sample.init_plot()

@@ -5,19 +5,19 @@ import os, sys
 from contours.config import COLOR, KWARGS, GAUSS_ARGS
 from contours.config.args import parser
 
-from contours.program import LoadArgs
+from contours.program import RunSurface
 
 
 if __name__ == '__main__':
-    args = LoadArgs(parser)
+    args = RunSurface(parser)
 
     surf = args.get_surface()
     if args.contours:
         args.plot_contours(surf)
 
-    barcode_surf = None
     if args.barcode:
-        args.plot_barcode(surf)
+        barcode = surf.get_barcode()
+        args.plot_barcode(surf, barcode, **KWARGS['barcode'])
 
     sample = args.do_sample(surf)
 

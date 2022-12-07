@@ -40,6 +40,8 @@ parser.add_argument('--resolution', default=1024, type=int, help='resolution')
 parser.add_argument('--mode', '-m', default=None, type=str, help='program mode')
 parser.add_argument('--parent', default=None, help='sample parent (supersample)')
 parser.add_argument('--seed', default=None, type=int, help='sample seed')
+parser.add_argument('--rmin', action="store_true", help='reverse min')
+parser.add_argument('--rmax', action="store_true", help='reverse max')
 
 parser.add_argument('--force', action='store_true', help='force save sample')
 parser.add_argument('--barcode', action='store_true')

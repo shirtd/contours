@@ -159,6 +159,19 @@ class DualComplex(CellComplex):
     def superlevels(self, sample, key='sup', verbose=False):
         for s in tqit(self, verbose, 'sup'):
             s.data[key] = sample(self.primal(s)).max()
+    def lips(self, sample, constant, invert_min=False):
+        for s in self(2):
+            s.data['max'] = s.data['min'] = sample(self.primal(s)[0])
+        for s in self(0):
+            ds = self.primal(s)
+            dist = la.norm(self.P[s[0]] - self.K.P[ds[0]])
+            s.data['max'] = min(sample(v) + constant * dist for v in ds)
+            s.data['min'] = max(sample(v) - constant * dist for v in ds)
+        # TODO not right; try --contours --voronoi --nomax with dist/=2
+        for s in self(1):
+            s.data['max'] = min(v.data['max'] for v in self.faces(s))
+            s.data['min'] = max(v.data['min'] for v in self.faces(s))
+            # s.data['max'] = (min if invert_min else max)(v.data['max'] for v in self.faces(s))
 
 # class DelaunayComplex(SimplicialComplex):
 #     def __init__(self, P):
