@@ -61,7 +61,11 @@ class Complex:
             self.__cofaces[fk].add(k)
         return cell
     def faces(self, c):
-        return [self.__map[f] for f in self.__faces[hash(c)]]
+        try:
+            return [self.__map[f] for f in self.__faces[hash(c)]]
+        except KeyError as err:
+            print(f'Error with {c}')
+            raise err
     def cofaces(self, c):
         return [self.__map[f] for f in self.__cofaces[hash(c)]]
     def items(self):

@@ -3,38 +3,38 @@ import numpy as np
 import argparse
 import os, sys
 
-from contours.config import COLOR, KWARGS, parser
-from contours.surface import ScalarFieldFile, MetricSampleFile
-from contours.complex import RipsComplex, DelaunayComplex, VoronoiComplex
+from contours.config import COLOR, COLORS, KWARGS
+from contours.config.args import parser
+from contours.plot import init_barcode, plot_barcode
 
-FILE = 'data/rainier_sub/samples/rainier_sub32-sample1257-2000.csv'
-# SUB_FILE = 'data/rainier_sub/samples/rainier_sub32-sample1257-2000.csv'
+from contours.surface import ScalarFieldFile, MetricSampleFile
+from contours.program import RunSample
+from contours.complex import VoronoiComplex
+from contours.persistence import Filtration, Diagram
 
 plt.ion()
 
 if __name__ == '__main__':
+    args = RunSample(parser)
 
-    sample = MetricSampleFile(FILE)
-    # subsample = MetricSampleFile(SUB_FILE)
-
-    complex = DelaunayComplex(sample.points, sample.radius, verbose=True)
-    complex.sublevels(sample)
-
-    complex = VoronoiComplex(complex, verbose=True)
-    complex.lips_sub(sample)
-
-    # complex.lips_sub(subsample, args.local)
-    # complex.lips(sample, sample.config['lips'], invert_min=True)
-
-    # sample_dgms = sample.plot_lips_sub_barcode(complex, subsample, True, False, 'figures', True, 300, smooth=False, **KWARGS['barcode'])
-    # sample_dgms = sample.plot_lips_barcode(complex, True, False, 'figures', True, 300, smooth=False, **KWARGS['barcode'])
-    sample_dgms = sample.plot_barcode(complex, True, False, 'figures', True, 300, smooth=False, **KWARGS['barcode'])
+    # args.file = "data/surf/samples/surf8-sample322-111.csv"
+    args.file = "data/surf/samples/surf8-sample1002-61.csv"
 
 
-    fig, ax = sample.init_plot()
+    sample = MetricSampleFile(args.file)
+    args.set_args(sample)
 
-    V = complex.P
-    ax.scatter(V[:,0], V[:,1], c='red', s=5, zorder=5)
-    E = np.array([[V[v] for v in e] for e in complex(1) if len(e) == 2])
-    for e in E:
-        ax.plot(e[:,0], e[:,1], color='black', zorder=2)
+    delaunay = sample.get_delaunay(2e4)
+    voronoi = VoronoiComplex(delaunay) # , delaunay.get_boundary())
+
+    delaunay.lips(sample, sample.config['lips'])
+    voronoi.lips(sample, sample.config['lips'])
+
+    filt = Filtration(voronoi, 'min')
+    pivot = Filtration(delaunay, 'max')
+    map = {s : voronoi.primal(s) for s in voronoi}
+    hom =  Diagram(voronoi, filt, pivot=pivot, map=map, dual=True, verbose=True)
+    barcode = hom.get_diagram(voronoi, filt, pivot, delaunay)
+
+    fig, ax = init_barcode()
+    barcode_plt = plot_barcode(ax, barcode[1], sample.cuts, sample.colors, **KWARGS['barcode'])

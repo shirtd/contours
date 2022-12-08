@@ -4,12 +4,13 @@ from contours.util import diff, identity, reduce, tqdm, np
 #       unpairs contains death indices, pairs contains birth indices
 
 class Reduction:
-    def __init__(self, K, F, R, coh, pivot):
+    def __init__(self, K, F, R, coh, pivot, map, dual):
         self.__sequence, self.__n = F.get_range(R, coh), len(F) - len(R)
         self.R, self.coh, self.dim = R, coh, F.dim
-        self.pivot_map = {i : F.index(s) for i,s in enumerate(pivot)}
+        rmap = {v : k for k,v in map.items()}
+        self.pivot_map = {i : F.index(rmap[s]) for i,s in enumerate(pivot)}
         self.unpairs, self.pairs, self.copairs = set(self), {}, {}
-        self.D = F.get_matrix(K, self, coh, pivot)
+        self.D = F.get_matrix(K, self, coh, pivot, map, dual)
     def __iter__(self):
         for seq in self.__sequence:
             yield from seq
@@ -21,7 +22,8 @@ class Reduction:
         self.pairs[b] = d
         self.copairs[d] = b
         # TODO (I)
-        self.unpairs.remove(self.pivot_map[b])
+        if self.pivot_map[b] in self.unpairs:
+            self.unpairs.remove(self.pivot_map[b])
         if d in self.unpairs:
             self.unpairs.remove(d)
     def __pair(self, low):
@@ -40,15 +42,15 @@ class Reduction:
                     self[low] = i
 
 class Diagram(Reduction):
-    def __init__(self, K, F, R=set(), coh=False, pivot=None, clearing=False, verbose=False, domap=False):
+    def __init__(self, K, F, R=set(), coh=False, pivot=None, map=None, dual=False, clearing=False, verbose=False, domap=False):
         pivot = F if pivot is None else pivot
-        Reduction.__init__(self, K, F, R, coh, pivot)
+        Reduction.__init__(self, K, F, R, coh, pivot, map, dual)
         self.reduce(clearing, verbose)
-        res = self.get_diagram(K, F, pivot)
-        if domap:
-            self.diagram, self.fmap = res
-        else:
-            self.diagram, self.fmap = res, None
+        # res = self.get_diagram(K, F, pivot)
+        # if domap:
+        #     self.diagram, self.fmap = res
+        # else:
+        #     self.diagram, self.fmap = res, None
     def __call__(self, i):
         if i in self.fmap:
             return self.fmap[i]
@@ -65,11 +67,13 @@ class Diagram(Reduction):
         yield from self.pairs.values()
     def is_relative(self, i):
         return i in self.R
-    def get_diagram(self, K, F, pivot=None, smoothing=None, domap=False):
+    def get_diagram(self, K, F, pivot=None, L=None, smoothing=None, domap=False):
+        L = K if L is None else L
         pivot = F if pivot is None else pivot
         fmap, dgms = {}, [[] for d in range(self.dim+1)]
         for i, j in self.items():
-            b, d = K[pivot[i]], K[F[self[i]]]
+            b = L[pivot[i]]
+            d = K[F[self[i]]]
             fmap[i] = [b(pivot.key), d(F.key)][::(-1 if F.reverse else 1)]
             if smoothing is not None:
                 fmap[i] = smoothing(fmap[i])
