@@ -7,8 +7,11 @@ class Reduction:
     def __init__(self, K, F, R, coh, pivot, map, dual):
         self.__sequence, self.__n = F.get_range(R, coh), len(F) - len(R)
         self.R, self.coh, self.dim = R, coh, F.dim
-        rmap = {v : k for k,v in map.items()}
-        self.pivot_map = {i : F.index(rmap[s]) for i,s in enumerate(pivot)}
+        if map is not None:
+            rmap = {v : k for k,v in map.items()}
+            self.pivot_map = {i : F.index(rmap[s]) for i,s in enumerate(pivot)}
+        else:
+            self.pivot_map = {i : F.index(s) for i,s in enumerate(pivot)}
         self.unpairs, self.pairs, self.copairs = set(self), {}, {}
         self.D = F.get_matrix(K, self, coh, pivot, map, dual)
     def __iter__(self):
