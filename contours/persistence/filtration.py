@@ -36,11 +36,12 @@ class Filtration:
     def get_matrix(self, K, rng, coh=False, pivot=None):
         return (self.get_cochains if coh else self.get_chains)(K, rng, pivot)
 
-class FiltrationMap:
-    def __init__(self, L, K, map):
-        self.L, self.K, self.map = L, K, map
-        self.matrix = np.zeros((len(K),len(L)), dtype=int)
-        for i,s in enumerate(L):
-            self.matrix[K.index(self(s))] = 1
+class ImageFiltration(Filtration):
+    def __init__(self, domain, codomain, map, reverse=False, filter=None):
+        self.domian, self.codomain, self.map = domain, codomain, map
+        Filtration.__init__(self, self.codomain.K, self.codomain.key, reverse, filter)
     def __call__(self, s):
         return self.map[s]
+    # TODO !!
+    # def get_matrix(self, K, rng, coh=False, pivot=None):
+    #     return (self.get_cochains if coh else self.get_chains)(K, rng, pivot)
