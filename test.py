@@ -19,21 +19,25 @@ if __name__ == '__main__':
 
     # args.file = "data/surf/samples/surf8-sample322-111.csv"
     args.file = "data/surf/samples/surf8-sample1002-61.csv"
+    # args.file = "data/surf/samples/surf4-sample3261-34.csv"
 
 
     sample = MetricSampleFile(args.file)
     args.set_args(sample)
 
-    delaunay = sample.get_delaunay(2e4)
-    voronoi = VoronoiComplex(delaunay) # , delaunay.get_boundary())
-
+    # delaunay = sample.get_rips()
+    delaunay = sample.get_delaunay()
     delaunay.lips(sample, sample.config['lips'])
-    voronoi.lips(sample, sample.config['lips'])
+    voronoi = VoronoiComplex(delaunay)#, delaunay.get_boundary())
+
+    fig, ax = sample.init_plot()
+    sample.plot_complex(ax, delaunay, **KWARGS['max']['delaunay'])
+    sample.plot_complex(ax, voronoi, **KWARGS['min']['voronoi'])
 
     filt = Filtration(voronoi, 'min')
     pivot = Filtration(delaunay, 'max')
     map = {s : voronoi.primal(s) for s in voronoi}
-    hom =  Diagram(voronoi, filt, pivot=pivot, map=map, dual=True, verbose=True)
+    hom =  Diagram(voronoi, filt, pivot=pivot, map=map, dual=False, verbose=True)
     barcode = hom.get_diagram(voronoi, filt, pivot, delaunay)
 
     fig, ax = init_barcode()

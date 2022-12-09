@@ -133,8 +133,8 @@ class MetricSampleData(MetricSample, Data):
             pivot = Filtration(complex, pivot_key, filter=lambda s: s['dist'] <= self.radius)
         else:
             pivot = Filtration(complex, pivot_key)
-        hom =  Diagram(complex, filt, pivot=pivot, verbose=True)
-        return hom.get_diagram(complex, filt, pivot, self.smooth if smooth else None)
+        hom =  Diagram(filt, pivot=pivot, verbose=True)
+        return hom.get_diagram(filt, pivot, smoothing=self.smooth if smooth else None)
     # def get_lips_sub_barcode(self, complex, smooth=True):
     #     filt = Filtration(complex, 'min')
     #     if complex.thresh > self.radius:

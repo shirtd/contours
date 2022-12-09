@@ -13,6 +13,8 @@ from contours.program import RunSample
 if __name__ == '__main__':
     args = RunSample(parser)
 
+    # RIPS IMAGE IS BROKEN; SEE FILTRATION.FILTER
+
     sample = MetricSampleFile(args.file)
     args.set_args(sample)
 

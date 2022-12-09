@@ -39,7 +39,6 @@ class Surface(Function, PointCloud):
     def plot(self, ax, zorder=0, **kwargs):
         return {'surface' : ax.contourf(*self.grid, self.surface, levels=self.cuts, colors=self.colors, zorder=zorder, **kwargs),
                 'contours' : ax.contour(*self.grid, self.surface, levels=self.cuts[1:], colors=self.colors[1:], zorder=zorder+1)}
-
     def get_radius(self, points, radius, mult=3):
         T = KDTree(points)
         data = self.get_data()[self.function > self.cuts[0]]

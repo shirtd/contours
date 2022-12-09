@@ -3,6 +3,7 @@ import numpy.linalg as la
 from itertools import combinations
 
 from ..util import stuple, tqit
+from ..util.geometry import circumcenter, circumradius
 
 
 class Element:
@@ -125,12 +126,15 @@ class SimplicialComplex(Complex):
         for s in self(0):
             s.data['max'] = s.data['min'] = sample(s[0])
         for s in self(1):
-            d = la.norm(sample[s[0]] - sample[s[1]])
-            s.data['max'] = max(sample(v) for v in s) + constant * d / 2
-            s.data['min'] = min(sample(v) for v in s) - constant * d / 2
+            d = la.norm(sample[s[0]] - sample[s[1]]) / 2
+            s.data['max'] = max(sample(v) for v in s) + constant * d
+            s.data['min'] = min(sample(v) for v in s) - constant * d
         for s in self(2):
-            s.data['max'] = max(self[e].data['max'] for e in combinations(s,2))
-            s.data['min'] = (max if invert_min else min)(self[e].data['min'] for e in combinations(s,2))
+            d = circumradius(sample[s])
+            s.data['max'] = max(sample(v) for v in s) + constant * d
+            s.data['min'] = (max if invert_min else min)(sample(v) for v in s) - constant * d
+            # s.data['max'] = max(self[e].data['max'] for e in combinations(s,2))
+            # s.data['min'] = (max if invert_min else min)(self[e].data['min'] for e in combinations(s,2))
 
 class DualComplex(CellComplex):
     def __init__(self, K, B, verbose=False, desc='voronoi'):

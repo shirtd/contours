@@ -4,16 +4,17 @@ from contours.util import diff, identity, reduce, tqdm, np
 #       unpairs contains death indices, pairs contains birth indices
 
 class Reduction:
-    def __init__(self, K, F, R, coh, pivot, map, dual):
-        self.__sequence, self.__n = F.get_range(R, coh), len(F) - len(R)
-        self.R, self.coh, self.dim = R, coh, F.dim
+    def __init__(self, filt, relative, coh, pivot, map, dual):
+        self.relative, self.coh, self.dim = relative, coh, filt.dim
+        self.__sequence = filt.get_range(relative, coh)
+        self.__n = len(filt) - len(relative)
         if map is not None:
             rmap = {v : k for k,v in map.items()}
-            self.pivot_map = {i : F.index(rmap[s]) for i,s in enumerate(pivot)}
+            self.pivot_map = {i : filt.index(rmap[s]) for i,s in enumerate(pivot)}
         else:
-            self.pivot_map = {i : F.index(s) for i,s in enumerate(pivot)}
+            self.pivot_map = {i : filt.index(s) for i,s in enumerate(pivot)}
         self.unpairs, self.pairs, self.copairs = set(self), {}, {}
-        self.D = F.get_matrix(K, self, coh, pivot, map, dual)
+        self.D = filt.get_matrix(self, coh, pivot, map, dual)
     def __iter__(self):
         for seq in self.__sequence:
             yield from seq
@@ -37,17 +38,17 @@ class Reduction:
     def reduce(self, clearing=False, verbose=False, desc='persist'):
         for i in (tqdm(self, total=len(self), desc=desc) if verbose else self):
             if not (clearing and self.__paired(i)):
-                low = self.D[i].get_pivot(self.R)#, self.pivot_map)
+                low = self.D[i].get_pivot(self.relative)#, self.pivot_map)
                 while self.__paired(low):
                     self.D[i] += self.D[self.__pair(low)]
-                    low = self.D[i].get_pivot(self.R)#, self.pivot_map)
+                    low = self.D[i].get_pivot(self.relative)#, self.pivot_map)
                 if low is not None:
                     self[low] = i
 
 class Diagram(Reduction):
-    def __init__(self, K, F, R=set(), coh=False, pivot=None, map=None, dual=False, clearing=False, verbose=False, domap=False):
-        pivot = F if pivot is None else pivot
-        Reduction.__init__(self, K, F, R, coh, pivot, map, dual)
+    def __init__(self, filt, relative=set(), coh=False, pivot=None, map=None, dual=False, clearing=False, verbose=False, domap=False):
+        pivot = filt if pivot is None else pivot
+        Reduction.__init__(self, filt, relative, coh, pivot, map, dual)
         self.reduce(clearing, verbose)
         # res = self.get_diagram(K, F, pivot)
         # if domap:
@@ -69,25 +70,23 @@ class Diagram(Reduction):
     def values(self):
         yield from self.pairs.values()
     def is_relative(self, i):
-        return i in self.R
-    def get_diagram(self, K, F, pivot=None, L=None, smoothing=None, domap=False):
-        L = K if L is None else L
-        pivot = F if pivot is None else pivot
+        return i in self.relative
+    def get_diagram(self, filt, pivot=None, smoothing=None, domap=False):
+        pivot = filt if pivot is None else pivot
         fmap, dgms = {}, [[] for d in range(self.dim+1)]
         for i, j in self.items():
-            b = L[pivot[i]]
-            d = K[F[self[i]]]
-            fmap[i] = [b(pivot.key), d(F.key)][::(-1 if F.reverse else 1)]
+            b = pivot.complex[pivot[i]]
+            d = filt.complex[filt[self[i]]]
+            fmap[i] = [b(pivot.key), d(filt.key)][::(-1 if filt.reverse else 1)]
             if smoothing is not None:
                 fmap[i] = smoothing(fmap[i])
             if fmap[i][0] < fmap[i][1]:
                 dgms[b.dim].append(fmap[i])
         for i in self.unpairs:
-            b = K[F[i]]
+            b = filt.complex[filt[i]]
             fmap[i] = [b(pivot.key) if smoothing is None else b(pivot.key), np.inf]
             dgms[b.dim].append(fmap[i])
-        dgms = [np.array(sorted(filter(lambda p: p[0] < p[1], d),
-                            key=lambda p: p[0])) for d in dgms]
+        dgms = [np.array(sorted(filter(lambda p: p[0] < p[1], d), key=lambda p: p[0])) for d in dgms]
         # dgms = list(map(np.array, dgms))
         if domap:
             return dgms, fmap
