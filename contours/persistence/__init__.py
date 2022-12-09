@@ -1,2 +1,2 @@
-from ..persistence.diagram import Diagram
+from ..persistence.barcode import Barcode
 from ..persistence.filtration import Filtration

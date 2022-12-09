@@ -45,16 +45,11 @@ class Reduction:
                 if low is not None:
                     self[low] = i
 
-class Diagram(Reduction):
+class Barcode(Reduction):
     def __init__(self, filt, relative=set(), coh=False, pivot=None, map=None, dual=False, clearing=False, verbose=False, domap=False):
         pivot = filt if pivot is None else pivot
         Reduction.__init__(self, filt, relative, coh, pivot, map, dual)
         self.reduce(clearing, verbose)
-        # res = self.get_diagram(K, F, pivot)
-        # if domap:
-        #     self.diagram, self.fmap = res
-        # else:
-        #     self.diagram, self.fmap = res, None
     def __call__(self, i):
         if i in self.fmap:
             return self.fmap[i]
@@ -71,7 +66,7 @@ class Diagram(Reduction):
         yield from self.pairs.values()
     def is_relative(self, i):
         return i in self.relative
-    def get_diagram(self, filt, pivot=None, smoothing=None, domap=False):
+    def get_barcode(self, filt, pivot=None, smoothing=None, domap=False):
         pivot = filt if pivot is None else pivot
         fmap, dgms = {}, [[] for d in range(self.dim+1)]
         for i, j in self.items():
@@ -87,18 +82,6 @@ class Diagram(Reduction):
             fmap[i] = [b(pivot.key) if smoothing is None else b(pivot.key), np.inf]
             dgms[b.dim].append(fmap[i])
         dgms = [np.array(sorted(filter(lambda p: p[0] < p[1], d), key=lambda p: p[0])) for d in dgms]
-        # dgms = list(map(np.array, dgms))
         if domap:
             return dgms, fmap
         return dgms
-    # def element_pair(self, K, F, i):
-    #     return [K[F[i]], K[F[self[i]]]]
-    # def element_diagram(self, K, F):
-    #     it = map(lambda i: self.element_pair(K, F, i), self)
-    #     return partition(lambda L,p: insert(L, p[0].dim, p), it, self.dim+1)
-    # def key_pair(self, K, key, p):
-    #     return np.array([K[p[0]](key), np.inf if p[1] is None else K[p[1]](key)])
-    # def get_diagram(self, K, F):
-    #     f = lambda d: sorted(d, key=partial(self.key_pair, K, F.key))
-    #     edgm = map(f, self.element_diagram(K, F)
-    #     dgm = [np.vstack(map(partial(self.key_pair, K, F.key), d)) for d in edgm]

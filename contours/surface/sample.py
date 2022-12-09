@@ -7,7 +7,7 @@ from ..config import COLOR, KWARGS
 from ..data import Data, DataFile, Function, PointCloud
 from ..util import lmap, format_float
 from ..complex import RipsComplex, DelaunayComplex, VoronoiComplex
-from ..persistence import Diagram, Filtration
+from ..persistence import Barcode, Filtration
 from ..util.grid import lipschitz_grid
 from ..util.geometry import coords_to_meters, greedysample
 from ..plot import init_surface, plot_balls, init_barcode, plot_barcode
@@ -133,16 +133,16 @@ class MetricSampleData(MetricSample, Data):
             pivot = Filtration(complex, pivot_key, filter=lambda s: s['dist'] <= self.radius)
         else:
             pivot = Filtration(complex, pivot_key)
-        hom =  Diagram(filt, pivot=pivot, verbose=True)
-        return hom.get_diagram(filt, pivot, smoothing=self.smooth if smooth else None)
+        hom =  Barcode(filt, pivot=pivot, verbose=True)
+        return hom.get_barcode(filt, pivot, smoothing=self.smooth if smooth else None)
     # def get_lips_sub_barcode(self, complex, smooth=True):
     #     filt = Filtration(complex, 'min')
     #     if complex.thresh > self.radius:
     #         pivot = Filtration(complex, 'max', filter=lambda s: s['dist'] <= self.radius)
     #     else:
     #         pivot = Filtration(complex, 'max')
-    #     hom =  Diagram(complex, filt, pivot=pivot, verbose=True)
-    #     return hom.get_diagram(complex, filt, pivot, self.smooth if smooth else None)
+    #     hom =  Barcode(complex, filt, pivot=pivot, verbose=True)
+    #     return hom.get_barcode(complex, filt, pivot, self.smooth if smooth else None)
     # def plot_barcode(self, rips, show=False, save=False, folder='./', _color=None, dpi=300, smooth=True, sep='_', relative=False, **kwargs):
     #     fig, ax = init_barcode()
     #     filt = Filtration(rips, 'sub')
@@ -150,16 +150,16 @@ class MetricSampleData(MetricSample, Data):
     #         pivot = Filtration(rips, 'sub', filter=lambda s: s['dist'] <= self.radius)
     #     else:
     #         pivot = Filtration(rips, 'sub')
-    #     hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
-    #     dgms = hom.get_diagram(rips, filt, pivot, self.smooth if smooth else None)
-    #     barode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
+    #     hom =  Barcode(rips, filt, pivot=pivot, verbose=True)
+    #     barcodes = hom.get_barcode(rips, filt, pivot, self.smooth if smooth else None)
+    #     barode_plt = plot_barcode(ax, barcodes[1], self.cuts, self.colors, **kwargs)
     #     tag = f"barcode{'-relative' if relative else ''}"
     #     if not smooth:
     #         tag += '-nosmooth'
     #     if save: self.save_plot(folder, dpi, tag, sep)
     #     if show: plt.show()
     #     plt.close(fig)
-    #     return dgms
+    #     return barcodes
     # def plot_lips_barcode(self, rips, show=False, save=False, folder='./', _color=None, dpi=300, smooth=True, sep='_', relative=False, **kwargs):
     #     fig, ax = init_barcode()
     #     filt = Filtration(rips, 'min')
@@ -167,16 +167,16 @@ class MetricSampleData(MetricSample, Data):
     #         pivot = Filtration(rips, 'max', filter=lambda s: s['dist'] <= self.radius)
     #     else:
     #         pivot = Filtration(rips, 'max')
-    #     hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
-    #     dgms = hom.get_diagram(rips, filt, pivot, self.smooth if smooth else None)
-    #     barode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
+    #     hom =  Barcode(rips, filt, pivot=pivot, verbose=True)
+    #     barcodes = hom.get_barcode(rips, filt, pivot, self.smooth if smooth else None)
+    #     barode_plt = plot_barcode(ax, barcodes[1], self.cuts, self.colors, **kwargs)
     #     tag = f"barcode{'-relative' if relative else ''}-lips"
     #     if not smooth:
     #         tag += '-nosmooth'
     #     if save: self.save_plot(folder, dpi, tag, sep)
     #     if show: plt.show()
     #     plt.close(fig)
-    #     return dgms
+    #     return barcodes
     # def plot_lips_sub_barcode(self, rips, subsample, show=False, save=False, folder='./', _color=None, dpi=300, smooth=True,  sep='_', relative=False, **kwargs):
     #     fig, ax = init_barcode()
     #     filt = Filtration(rips, 'min')
@@ -184,16 +184,16 @@ class MetricSampleData(MetricSample, Data):
     #         pivot = Filtration(rips, 'max', filter=lambda s: s['dist'] <= self.radius)
     #     else:
     #         pivot = Filtration(rips, 'max')
-    #     hom =  Diagram(rips, filt, pivot=pivot, verbose=True)
-    #     dgms = hom.get_diagram(rips, filt, pivot, self.smooth if smooth else None)
-    #     barode_plt = plot_barcode(ax, dgms[1], self.cuts, self.colors, **kwargs)
+    #     hom =  Barcode(rips, filt, pivot=pivot, verbose=True)
+    #     barcodes = hom.get_barcode(rips, filt, pivot, self.smooth if smooth else None)
+    #     barode_plt = plot_barcode(ax, barcodes[1], self.cuts, self.colors, **kwargs)
     #     tag = f"barcode{'-relative' if relative else ''}-lips-sub{len(subsample)}"
     #     if not smooth:
     #         tag += '-nosmooth'
     #     if save: self.save_plot(folder, dpi, tag, sep)
     #     if show: plt.show()
     #     plt.close(fig)
-    #     return dgms
+    #     return barcodes
 
 class MetricSampleFile(MetricSampleData, DataFile):
     def __init__(self, file_name, json_file=None, radius=None):

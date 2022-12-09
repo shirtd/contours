@@ -45,7 +45,7 @@
     ]
   ],
   "pad": 1500.0,
-  "lips": 3,
+  "lips": 3.0,
   "radius": 111,
   "parent": "surf8"
 }

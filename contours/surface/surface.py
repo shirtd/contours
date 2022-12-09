@@ -12,7 +12,7 @@ from ..surface.sample import Sample, MetricSampleData
 from ..plot import init_surface, init_barcode, plot_barcode
 from ..util.grid import gaussian_field, down_sample, lipschitz_grid
 from ..util.geometry import coords_to_meters, greedysample
-from ..util.topology import init_diagrams
+# from ..util.topology import  init_barcodes
 from ..util import lmap, format_float, diff
 
 
@@ -33,7 +33,7 @@ class Surface(Function, PointCloud):
             return min(self(i) for i in s) > self.cuts[0]
         filt = dio.Filtration([s for s in filt if f(s)])
         hom = dio.homology_persistence(filt)
-        return init_diagrams(hom, filt)
+        return init_barcode(hom, filt)
     def init_plot(self):
         return init_surface(self.extents, self.pad)
     def plot(self, ax, zorder=0, **kwargs):

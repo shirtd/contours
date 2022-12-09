@@ -37,7 +37,7 @@ if __name__ == '__main__':
     filt = Filtration(voronoi, 'min')
     pivot = Filtration(delaunay, 'max')
     map = {s : voronoi.primal(s) for s in voronoi}
-    hom =  Diagram(voronoi, filt, pivot=pivot, map=map, dual=False, verbose=True)
+    hom =  Barcode(voronoi, filt, pivot=pivot, map=map, dual=False, verbose=True)
     barcode = hom.get_diagram(voronoi, filt, pivot, delaunay)
 
     fig, ax = init_barcode()
