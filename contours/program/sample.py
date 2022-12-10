@@ -77,19 +77,16 @@ class RunSample:
         if self.show:
             plt.show()
         plt.close(fig)
-    def plot_contours(self, sample, complex=None, subsample=None):
-        plot_args = self.plot_args.copy()
+    def plot_contours(self, sample, complex=None, subsample=None, hide={}):
         if self.lips:
-            plot_args += [{'min'} if self.nomin else {'max'} if self.nomax else {}]
+            hide = {'min'} if self.nomin else {'max'} if self.nomax else {}
         if self.cover or self.union:
             if self.lips:
-                sample.plot_lips_filtration(self.get_config(), self.get_tag(), *plot_args)
+                self.plot_lips_filtration(sample, hide)
             else:
-                sample.plot_cover_filtration(tag, *plot_args, **KWARGS[self.mode])
-        elif subsample is not None:
-            sample.plot_complex_filtration(complex, self.get_config(), self.get_tag(subsample), *plot_args)
+                self.plot_cover_filtration(sample, **KWARGS[self.mode])
         elif complex is not None:
-            sample.plot_complex_filtration(complex, self.get_config(), self.get_tag(), *plot_args)
+            self.plot_complex_filtration(sample, complex, subsample, hide)
     def plot_complex(self, sample, complex, subsample=None):
         fig, ax = sample.init_plot()
         tag = self.get_tag()
@@ -101,3 +98,55 @@ class RunSample:
             plt.show()
     def plot_cover(self, sample, subsample=None):
         print('TODO: plot_cover(sample{, subsample})')
+    def plot_complex_filtration(self, sample, complex, subsample=None, hide={}):
+        fig, ax = sample.init_plot()
+        config, tag = self.get_config(), self.get_tag(subsample)
+        if not (subsample is None or 'subsample' in hide):
+            subsample.plot(ax, plot_color=self.color, **KWARGS['subsample'])
+            if self.color:
+                subsample.plot(ax, zorder=10, s=10, facecolor='none', edgecolor='black', lw=0.3)
+        tag = self.get_tag(subsample)
+        do_color = {'min' : False if not 'max' in hide else self.color, 'max' : self.color, "sub" : self.color}
+        # do_color = {'min' : self.color, 'max' : self.color, "sub" : self.color}
+        complex_plt = {k : sample.plot_complex(ax, complex, do_color[k], k, **v) for k,v in config.items() if not k in hide}
+        for i, t in enumerate(sample.get_levels()):
+            for d, S in complex.items():
+                for s in S:
+                    for k, v in complex_plt.items():
+                        if s.data[k] <= t and s in v[d]:
+                            v[d][s].set_visible(not config[k]['visible'])
+            if self.show:
+                plt.pause(0.5)
+            if self.save:
+                sample.save_plot(self.folder, self.dpi, f"{tag}{format_float(t)}")
+        plt.close(fig)
+    def plot_cover_filtration(self, sample, **kwargs):
+        fig, ax = sample.init_plot()
+        config, tag = self.get_config(), self.get_tag()
+        sample.plot(ax, **KWARGS['sample'])
+        offset_plt = sample.plot_cover(ax, self.color, visible=False, **kwargs)
+        for i, t in enumerate(sample.get_levels()):
+            for j,f in enumerate(self.function):
+                if f <= t:
+                    offset_plt[j].set_visible(True)
+            if self.show:
+                plt.pause(0.5)
+            if self.save:
+                sample.save_plot(self.folder, self.dpi, f"{tag}{format_float(t)}")
+        plt.close(fig)
+    def plot_lips_filtration(self, sample, hide={}, **kwargs):
+        fig, ax = sample.init_plot()
+        config, tag = self.get_config(), self.get_tag()
+        sample.plot(ax, **KWARGS['sample'])
+        offset_plt = {  'max' : sample.plot_cover(ax, self.color, samle.function/sample.config['lips'], **config['max']),
+                        'min' : sample.plot_cover(ax, self.color, self.function/self.config['lips'], **config['min'])}
+        for i, t in enumerate(sample.get_levels()):
+            for j,f in enumerate(sample.function):
+                fs = {'max' : (t - f) / sample.config['lips'], 'min' : (f - t) / sample.config['lips']}
+                for k,v in offset_plt.items():
+                    v[j].set_radius(fs[k] if fs[k] > 0 else 0)
+            if self.show:
+                plt.pause(0.5)
+            if self.save:
+                self.save_plot(self.folder, self.dpi, f"lips-{tag}{format_float(t)}")
+        plt.close(fig)
