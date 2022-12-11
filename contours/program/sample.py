@@ -13,10 +13,6 @@ from ..util import lmap, format_float
 class RunSample:
     def __init__(self, parser):
         parser.parse_args(namespace=self.__class__)
-        self.plot_args = [self.show, self.save, self.folder, self.color, self.dpi]
-    # TODO !!
-    # def plot_args(self, *args):
-    #     return [self.show, self.save, self.folder, self.color, self.dpi] + args
     def get_tag(self, subsample=None, suffix=''):
         tag = f"{self.mode}{'-noim' if self.noim else ''}"
         if subsample is not None:
@@ -35,7 +31,6 @@ class RunSample:
         if self.lips:
             self.folder = os.path.join(self.folder, 'lips')
         self.folder = os.path.join(self.folder, self.mode)
-        self.plot_args = [self.show, self.save, self.folder, self.color, self.dpi]
     def get_config(self):
         if self.lips:
             if self.cover or self.union:
@@ -97,8 +92,16 @@ class RunSample:
         if self.show:
             print('close plot to exit')
             plt.show()
-    def plot_cover(self, sample, subsample=None):
-        print('TODO: plot_cover(sample{, subsample})')
+    def plot_cover(self, sample):
+        fig, ax = sample.init_plot()
+        tag = self.get_tag()
+        sample.plot(ax, **KWARGS['sample'])
+        complex_plt = sample.plot_cover(ax, self.color, **KWARGS[self.mode])
+        if self.save:
+            sample.save_plot(self.folder, self.dpi, tag)
+        if self.show:
+            print('close plot to exit')
+            plt.show()
     def plot_complex_filtration(self, sample, complex, subsample=None, hide={}):
         fig, ax = sample.init_plot()
         config, tag = self.get_config(), self.get_tag(subsample)
@@ -106,9 +109,7 @@ class RunSample:
             subsample.plot(ax, plot_color=self.color, **KWARGS['subsample'])
             if self.color:
                 subsample.plot(ax, zorder=10, s=10, facecolor='none', edgecolor='black', lw=0.3)
-        tag = self.get_tag(subsample)
         do_color = {'min' : False if not 'max' in hide else self.color, 'max' : self.color, "sub" : self.color}
-        # do_color = {'min' : self.color, 'max' : self.color, "sub" : self.color}
         complex_plt = {k : sample.plot_complex(ax, complex, do_color[k], k, **v) for k,v in config.items() if not k in hide}
         for i, t in enumerate(sample.get_levels()):
             for d, S in complex.items():

@@ -13,7 +13,11 @@ from contours.program import RunSample
 if __name__ == '__main__':
     args = RunSample(parser)
 
-    # RIPS IMAGE IS BROKEN; SEE FILTRATION.FILTER
+    # RIPS IMAGE IS BROKEN;
+    # EMPTY BARCODE
+    # SEE ImageFiltration;
+    # RUN main.py data/surf/samples/surf8-sample322-111.csv --rips --barcode --show
+    # --noim works
 
     sample = MetricSampleFile(args.file)
     args.set_args(sample)
@@ -34,23 +38,5 @@ if __name__ == '__main__':
     if complex is not None:
         args.plot_complex(sample, complex)
 
-
-    # else:
-    #     fig, ax = sample.init_plot()
-    #     if args.cover or args.union:
-    #         sample.plot(ax, **KWARGS['sample'])
-    #         cover_plt = sample.plot_cover(ax, args.color, **KWARGS[args.mode])
-    #     elif args.rips or args.graph or args.delaunay or args.voronoi:
-    #         complex_plt = sample.plot_complex(ax, complex, args.color, **KWARGS[args.mode])
-    #     elif args.sub_file is not None:
-    #         sample.plot(ax, **KWARGS['sample'])
-    #         subsample.plot(ax, plot_color=args.color, **KWARGS['subsample'])
-    #     else:
-    #         sample.plot(ax, **KWARGS['sample'])
-    #
-    #     if args.save:
-    #         sample.save_plot(args.folder, args.dpi, tag)
-    #
-    #     if args.show:
-    #         print('close plot to exit')
-    #         plt.show()
+    if args.cover or args.union:
+        args.plot_cover(sample)

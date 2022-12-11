@@ -1,20 +1,20 @@
 from contours.util import diff, identity, reduce, tqdm, np
+from contours.persistence import ImageFiltration
 
 # TODO  row and column relative indices
 #       unpairs contains death indices, pairs contains birth indices
 
 class Reduction:
-    def __init__(self, filt, relative, coh, pivot, map, dual):
+    def __init__(self, filt, pivot, relative, coh):
         self.relative, self.coh, self.dim = relative, coh, filt.dim
         self.__sequence = filt.get_range(relative, coh)
         self.__n = len(filt) - len(relative)
-        if map is not None:
-            rmap = {v : k for k,v in map.items()}
-            self.pivot_map = {i : filt.index(rmap[s]) for i,s in enumerate(pivot)}
+        if isinstance(filt, ImageFiltration):
+            self.pivot_map = {i : filt.index(filt.inverse[s]) for i,s in enumerate(pivot)}
         else:
             self.pivot_map = {i : filt.index(s) for i,s in enumerate(pivot)}
         self.unpairs, self.pairs, self.copairs = set(self), {}, {}
-        self.D = filt.get_matrix(self, coh, pivot, map, dual)
+        self.D = filt.get_matrix(self, coh, pivot)
     def __iter__(self):
         for seq in self.__sequence:
             yield from seq
@@ -46,9 +46,9 @@ class Reduction:
                     self[low] = i
 
 class Barcode(Reduction):
-    def __init__(self, filt, relative=set(), coh=False, pivot=None, map=None, dual=False, clearing=False, verbose=False, domap=False):
+    def __init__(self, filt, pivot=None, relative=set(), coh=False, clearing=False, verbose=False, domap=False):
         pivot = filt if pivot is None else pivot
-        Reduction.__init__(self, filt, relative, coh, pivot, map, dual)
+        Reduction.__init__(self, filt, pivot, relative, coh)
         self.reduce(clearing, verbose)
     def __call__(self, i):
         if i in self.fmap:

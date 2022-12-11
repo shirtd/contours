@@ -51,8 +51,26 @@ class RunSurface:
         if self.show:
             plt.show()
         plt.close(fig)
-    def plot_contours(self, surf):
-        surf.plot_contours(*self.plot_args)
+    def plot_contours(self, surf, off_alpha=0.1):
+        fig, ax = surf.init_plot()
+        surf_plt = surf.plot(ax)
+        surf_alpha = [off_alpha for _ in surf.colors]
+        cont_alpha = surf_alpha.copy()
+        surf_plt['surface'].set_alpha(surf_alpha)
+        surf_plt['contours'].set_alpha(cont_alpha)
+        if self.show:
+            plt.pause(0.5)
+        if self.save:
+            surf.save_plot(self.folder, self.dpi, format_float(surf.cuts[0]))
+        for i, t in enumerate(surf.cuts[1:]):
+            cont_alpha[i], surf_alpha[i] = 1., 0.5
+            surf_plt['contours'].set_alpha(cont_alpha)
+            surf_plt['surface'].set_alpha(surf_alpha)
+            if self.show:
+                plt.pause(0.5)
+            if self.save:
+                self.save_plot(self.folder, self.dpi, format_float(t))
+        plt.close(fig)
     def plot_surface(self, surf):
         fig, ax = surf.init_plot()
         surf_plt = surf.plot(ax, zorder=0)

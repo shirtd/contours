@@ -97,22 +97,6 @@ class ScalarFieldData(ScalarField, Data):
         config = {'extents' : extents, 'cuts' : cuts, 'colors' : colors, 'pad' : pad, 'lips' : lips}
         ScalarField.__init__(self, surface, **config)
         Data.__init__(self, surface, name, folder, config)
-    def plot_contours(self, show=True, save=False, folder='figures', dpi=300, pad=0, off_alpha=0.1):
-        fig, ax = self.init_plot()
-        surf_plt = self.plot(ax)
-        surf_alpha = [off_alpha for _ in self.colors]
-        cont_alpha = surf_alpha.copy()
-        surf_plt['surface'].set_alpha(surf_alpha)
-        surf_plt['contours'].set_alpha(cont_alpha)
-        if show: plt.pause(0.5)
-        if save: self.save_plot(folder, dpi, format_float(self.cuts[0]))
-        for i, t in enumerate(self.cuts[1:]):
-            cont_alpha[i], surf_alpha[i] = 1., 0.5
-            surf_plt['contours'].set_alpha(cont_alpha)
-            surf_plt['surface'].set_alpha(surf_alpha)
-            if show: plt.pause(0.5)
-            if save: self.save_plot(folder, dpi, format_float(t))
-        plt.close(fig)
     def save(self, config=None):
         if self.lips is None:
             self.config['lips'] = lipschitz_grid(self.surface, self.grid, self.cuts[0])

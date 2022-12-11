@@ -7,13 +7,10 @@ from ..config import COLOR, KWARGS
 from ..data import Data, DataFile, Function, PointCloud
 from ..util import lmap, format_float
 from ..complex import RipsComplex, DelaunayComplex, VoronoiComplex
-from ..persistence import Barcode, Filtration
+from ..persistence import Barcode, Filtration, ImageFiltration
 from ..util.grid import lipschitz_grid
 from ..util.geometry import coords_to_meters, greedysample
 from ..plot import init_surface, plot_balls, init_barcode, plot_barcode
-
-
-OOPS=2
 
 
 class Sample(Function, PointCloud):
@@ -42,7 +39,6 @@ class MetricSample(Sample):
                 f"{'-cover' if args.cover else '-union' if args.union else ''}"\
                 f"{'-color' if args.color else ''}"\
                 f"{'-surf' if args.surf else ''}"
-    # TODO redundant
     def plot_cover(self, ax, plot_colors=False, radii=None, radius=None, color=COLOR['red'], zorder=0, **kwargs):
         radii = [self.radius if radius is None else radius for _ in self] if radii is None else radii
         balls = []
@@ -69,7 +65,6 @@ class MetricSample(Sample):
             kwargs['color'] = color
         return complex.plot(ax, **kwargs)
 
-
 class MetricSampleData(MetricSample, Data):
     def __init__(self, data, radius, parent, folder, config):
         config['radius'], config['parent'] = radius, parent
@@ -77,64 +72,16 @@ class MetricSampleData(MetricSample, Data):
         Data.__init__(self, data, name, os.path.join(folder, 'samples'), config=config)
         MetricSample.__init__(self, data[:,:2], data[:,2], **config)
     def smooth(self, p):
-        return [p[0]+self.config['lips']*self.radius/OOPS, p[1]-self.config['lips']*self.radius/OOPS]
+        return [p[0]+self.config['lips']*self.radius/2, p[1]-self.config['lips']*self.radius/2]
     def get_barcode(self, complex, smooth=True, key='sub', pivot_key=None):
         pivot_key = key if pivot_key is None else pivot_key
         filt = Filtration(complex, key)
+        pivot = filt
         if complex.thresh > self.radius:
-            pivot = Filtration(complex, pivot_key, filter=lambda s: s['dist'] <= self.radius)
-        else:
-            pivot = Filtration(complex, pivot_key)
-        hom =  Barcode(filt, pivot=pivot, verbose=True)
+            pivot = Filtration(complex, pivot_key, filter=lambda s: s.data['dist'] <= self.radius)
+            filt = ImageFiltration(pivot, filt)
+        hom =  Barcode(filt, pivot, verbose=True)
         return hom.get_barcode(filt, pivot, smoothing=self.smooth if smooth else None)
-    # def plot_cover_filtration(self, tag=None, show=True, save=True, folder='figures', plot_colors=False, dpi=300, **kwargs):
-    #     fig, ax = self.init_plot()
-    #     self.plot(ax, **KWARGS['sample'])
-    #     offset_plt = self.plot_cover(ax, plot_colors, visible=False, **kwargs)
-    #     for i, t in enumerate(self.get_levels()):
-    #         for j,f in enumerate(self.function):
-    #             if f <= t:
-    #                 offset_plt[j].set_visible(True)
-    #         if show:
-    #             plt.pause(0.5)
-    #         if save:
-    #             self.save_plot(folder, dpi, f"{tag}{format_float(t)}")
-    #     plt.close(fig)
-    # def plot_lips_filtration(self, config, tag=None, show=True, save=True, folder='figures', plot_colors=False, dpi=300, hide={}, **kwargs):
-    #     fig, ax = self.init_plot()
-    #     self.plot(ax, **KWARGS['sample'])
-    #     offset_plt = {  'max' : self.plot_cover(ax, plot_colors, self.function/self.config['lips'], **config['max']),
-    #                     'min' : self.plot_cover(ax, plot_colors, self.function/self.config['lips'], **config['min'])}
-    #     for i, t in enumerate(self.get_levels()):
-    #         for j,f in enumerate(self.function):
-    #             fs = {'max' : (t - f) / self.config['lips'], 'min' : (f - t) / self.config['lips']}
-    #             for k,v in offset_plt.items():
-    #                 v[j].set_radius(fs[k] if fs[k] > 0 else 0)
-    #         if show:
-    #             plt.pause(0.5)
-    #         if save:
-    #             self.save_plot(folder, dpi, f"lips-{tag}{format_float(t)}")
-    #     plt.close(fig)
-    # def plot_complex_filtration(self, complex, config, tag=None, show=True, save=True, folder='figures', plot_colors=False, dpi=300, hide={}, subsample=None):
-    #     fig, ax = self.init_plot()
-    #     if not (subsample is None or 'subsample' in hide):
-    #         subsample.plot(ax, plot_color=plot_colors, **KWARGS['subsample'])
-    #         if plot_colors:
-    #             subsample.plot(ax, zorder=10, s=10, facecolor='none', edgecolor='black', lw=0.3)
-    #     do_color = {'min' : False if not 'max' in hide else plot_colors, 'max' : plot_colors, "sub" : plot_colors}
-    #     # do_color = {'min' : plot_colors, 'max' : plot_colors, "sub" : plot_colors}
-    #     complex_plt = {k : self.plot_complex(ax, complex, do_color[k], k, **v) for k,v in config.items() if not k in hide}
-    #     for i, t in enumerate(self.get_levels()):
-    #         for d, S in complex.items():
-    #             for s in S:
-    #                 for k, v in complex_plt.items():
-    #                     if s.data[k] <= t and s in v[d]:
-    #                         v[d][s].set_visible(not config[k]['visible'])
-    #         if show:
-    #             plt.pause(0.5)
-    #         if save:
-    #             self.save_plot(folder, dpi, f"{tag}{format_float(t)}")
-    #     plt.close(fig)
 
 class MetricSampleFile(MetricSampleData, DataFile):
     def __init__(self, file_name, json_file=None, radius=None):

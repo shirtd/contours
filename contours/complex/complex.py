@@ -78,7 +78,11 @@ class Complex:
     def __getitem__(self, key):
         if isinstance(key, int):
             key = (key,)
-        return self.__map[hash(key)]
+        try:
+            return self.__map[hash(key)]
+        except KeyError as e:
+            print(key)
+            raise e
     def __call__(self, dim):
         if dim in self.__elements:
             return self.__elements[dim]
@@ -89,9 +93,9 @@ class Complex:
         yield from self.__map.values()
     def __contains__(self, key):
         return hash(key) in self.__map
-    def get_sequence(self, key, reverse=False, filter=None):
-        r = -1 if reverse else 1
-        return sorted(self if filter is None else filter(self), key=lambda s: (r * s(key), s))
+    def get_sequence(self, key, reverse=False, fun=None):
+        fsort = lambda s: ((-1 if reverse else 1) * s(key), s)
+        return sorted(self if fun is None else filter(fun, self), key=fsort)
     def closure(self, s):
         return {s}.union({f for t in self.faces(s) for f in self.closure(t)})
     def __repr__(self):
@@ -104,8 +108,8 @@ class Complex:
             s.data[key] = sample(s).min()
     def lips_sub(self, subsample):
         for p, s in zip(self.P, self(0)):
-            s.data['max'] = min(f + subsample.config['lips']*la.norm(p - q) for q, f, c in zip(subsample, subsample.function, constants))
-            s.data['min'] = max(f - subsample.config['lips']*la.norm(p - q) for q, f, c in zip(subsample, subsample.function, constants))
+            s.data['max'] = min(f + subsample.config['lips']*la.norm(p - q) for q, f in zip(subsample, subsample.function))
+            s.data['min'] = max(f - subsample.config['lips']*la.norm(p - q) for q, f in zip(subsample, subsample.function))
         for s in self(1)+self(2):
             s.data['max'] = max(self(0)[v].data['max'] for v in s)
             s.data['min'] = max(self(0)[v].data['min'] for v in s)
