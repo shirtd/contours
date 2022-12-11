@@ -7,6 +7,7 @@ from contours.config import KWARGS, GAUSS_ARGS
 from contours.plot import init_barcode, plot_barcode
 from contours.surface import USGSScalarFieldData, GaussianScalarFieldData, ScalarFieldFile
 from contours.surface.sample import MetricSampleFile
+from ..util import lmap, format_float
 
 
 class RunSample:
@@ -138,8 +139,8 @@ class RunSample:
         fig, ax = sample.init_plot()
         config, tag = self.get_config(), self.get_tag()
         sample.plot(ax, **KWARGS['sample'])
-        offset_plt = {  'max' : sample.plot_cover(ax, self.color, samle.function/sample.config['lips'], **config['max']),
-                        'min' : sample.plot_cover(ax, self.color, self.function/self.config['lips'], **config['min'])}
+        offset_plt = {  'max' : sample.plot_cover(ax, self.color, sample.function/sample.config['lips'], **config['max']),
+                        'min' : sample.plot_cover(ax, self.color, sample.function/sample.config['lips'], **config['min'])}
         for i, t in enumerate(sample.get_levels()):
             for j,f in enumerate(sample.function):
                 fs = {'max' : (t - f) / sample.config['lips'], 'min' : (f - t) / sample.config['lips']}
@@ -148,5 +149,5 @@ class RunSample:
             if self.show:
                 plt.pause(0.5)
             if self.save:
-                self.save_plot(self.folder, self.dpi, f"lips-{tag}{format_float(t)}")
+                sample.save_plot(self.folder, self.dpi, f"lips-{tag}{format_float(t)}")
         plt.close(fig)
