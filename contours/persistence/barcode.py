@@ -5,16 +5,15 @@ from contours.persistence import ImageFiltration
 #       unpairs contains death indices, pairs contains birth indices
 
 class Reduction:
-    def __init__(self, filt, pivot, relative, coh):
+    def __init__(self, filt, relative, coh):
         self.relative, self.coh, self.dim = relative, coh, filt.dim
         self.__sequence = filt.get_range(relative, coh)
         self.__n = len(filt) - len(relative)
-        if isinstance(filt, ImageFiltration):
-            self.pivot_map = {i : filt.index(filt.inverse[s]) for i,s in enumerate(pivot)}
-        else:
-            self.pivot_map = {i : filt.index(s) for i,s in enumerate(pivot)}
+        # # TODO (I)
+        # if isinstance(filt, ImageFiltration):
+        #     self.pivot_map = {i : filt.index(filt.inverse[s]) for i,s in enumerate(pivot)}
         self.unpairs, self.pairs, self.copairs = set(self), {}, {}
-        self.D = filt.get_matrix(self, coh, pivot)
+        self.D = filt.get_matrix(self, coh)
     def __iter__(self):
         for seq in self.__sequence:
             yield from seq
@@ -25,9 +24,9 @@ class Reduction:
             b, d = d, b
         self.pairs[b] = d
         self.copairs[d] = b
-        # TODO (I)
-        if self.pivot_map[b] in self.unpairs:
-            self.unpairs.remove(self.pivot_map[b])
+        # # TODO (I)
+        # if self.pivot_map[b] in self.unpairs:
+        #     self.unpairs.remove(self.pivot_map[b])
         if d in self.unpairs:
             self.unpairs.remove(d)
     def __pair(self, low):
@@ -38,22 +37,17 @@ class Reduction:
     def reduce(self, clearing=False, verbose=False, desc='persist'):
         for i in (tqdm(self, total=len(self), desc=desc) if verbose else self):
             if not (clearing and self.__paired(i)):
-                low = self.D[i].get_pivot(self.relative)#, self.pivot_map)
+                low = self.D[i].get_pivot(self.relative)
                 while self.__paired(low):
                     self.D[i] += self.D[self.__pair(low)]
-                    low = self.D[i].get_pivot(self.relative)#, self.pivot_map)
+                    low = self.D[i].get_pivot(self.relative)
                 if low is not None:
                     self[low] = i
 
 class Barcode(Reduction):
-    def __init__(self, filt, pivot=None, relative=set(), coh=False, clearing=False, verbose=False, domap=False):
-        pivot = filt if pivot is None else pivot
-        Reduction.__init__(self, filt, pivot, relative, coh)
+    def __init__(self, filt, relative=set(), coh=False, clearing=False, verbose=False):
+        Reduction.__init__(self, filt, relative, coh)
         self.reduce(clearing, verbose)
-    def __call__(self, i):
-        if i in self.fmap:
-            return self.fmap[i]
-        return None
     def __getitem__(self, i):
         return self.pairs[i] if i in self.pairs else None
     def __contains__(self, i):
@@ -66,22 +60,11 @@ class Barcode(Reduction):
         yield from self.pairs.values()
     def is_relative(self, i):
         return i in self.relative
-    def get_barcode(self, filt, pivot=None, smoothing=None, domap=False):
-        pivot = filt if pivot is None else pivot
-        fmap, dgms = {}, [[] for d in range(self.dim+1)]
+    def get_barcode(self, filt, smoothing=None):
+        smoothing = (lambda l: l) if smoothing is None else smoothing
+        barcode = [[] for d in range(self.dim+1)]
         for i, j in self.items():
-            b = pivot.complex[pivot[i]]
-            d = filt.complex[filt[self[i]]]
-            fmap[i] = [b(pivot.key), d(filt.key)][::(-1 if filt.reverse else 1)]
-            if smoothing is not None:
-                fmap[i] = smoothing(fmap[i])
-            if fmap[i][0] < fmap[i][1]:
-                dgms[b.dim].append(fmap[i])
+            barcode[filt.get_dim(i)].append(smoothing(filt.get_interval(i, j)))
         for i in self.unpairs:
-            b = filt.complex[filt[i]]
-            fmap[i] = [b(pivot.key) if smoothing is None else b(pivot.key), np.inf]
-            dgms[b.dim].append(fmap[i])
-        dgms = [np.array(sorted(filter(lambda p: p[0] < p[1], d), key=lambda p: p[0])) for d in dgms]
-        if domap:
-            return dgms, fmap
-        return dgms
+            barcode[filt[i].dim].append(smoothing(filt.get_interval(i)))
+        return [np.array(sorted(filter(lambda p: p[0] < p[1], d), key=lambda p: p[0])) for d in barcode]

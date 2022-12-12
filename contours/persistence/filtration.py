@@ -1,5 +1,6 @@
 from contours.complex.chains import Chain, CoChain
 from contours.util import insert, partition
+import numpy as np
 
 
 class Filtration:
@@ -14,27 +15,27 @@ class Filtration:
     def __getitem__(self, i):
         return self.sequence[i]
     def index(self, s):
-        try:
-            return self.imap[hash(s)]
-        except KeyError as e:
-            print(s)
-            raise e
+        return self.imap[hash(s)]
     def get_range(self, R=set(), coh=False):
         it = reversed(list(enumerate(self))) if coh else enumerate(self)
         f = lambda L,ix: L if ix[0] in R else insert(L, ix[1].dim, ix[0])
         return partition(f, it, self.dim+1)[::(1 if coh else -1)]
-    def sort_faces(self, i, pivot=None):
-        pivot = self if pivot is None else pivot
-        return sorted([pivot.index(f) for f in self.complex.faces(self[i])])
-    def sort_cofaces(self, i, pivot=None):
-        pivot = self if pivot is None else pivot
-        return sorted([pivot.index(f) for f in self.complex.cofaces(self[i])], reverse=True)
-    def get_chains(self, rng, pivot=None):
-        return {i : Chain({i}, self.sort_faces(i, pivot)) for i in rng}
-    def get_cochains(self, rng, pivot=None):
-        return {i : CoChain({i}, self.sort_cofaces(i, pivot)) for i in rng}
-    def get_matrix(self, rng, coh=False, pivot=None):
-        return (self.get_cochains if coh else self.get_chains)(rng, pivot)
+    def get_column(self, i, coh=False):
+        return self.complex.cofaces(self[i]) if coh else self.complex.faces(self[i])
+    def sort_column(self, i, coh=False):
+        return sorted(map(self.index, self.get_column(i, coh)), reverse=coh)
+    def get_matrix(self, rng, coh=False):
+        return {i : (CoChain if coh else Chain)({i}, self.sort_column(i, coh)) for i in rng}
+    def get_birth(self, i=None):
+        return -np.inf if i is None else self[i](self.key)
+    def get_death(self, j=None):
+        return np.inf if j is None else self[j](self.key)
+    def get_interval(self, i, j=None):
+        if self.reverse:
+            return [self.get_birth(j), self.get_death(i)]
+        return [self.get_birth(i), self.get_death(j)]
+    def get_dim(self, i):
+        return self[i].dim
 
 class ImageFiltration(Filtration):
     def __init__(self, domain, codomain, map=None, dual=False, reverse=False, filter=None):
@@ -43,13 +44,15 @@ class ImageFiltration(Filtration):
         self.inverse = {v : k for k,v in self.map.items()}
         filt = lambda s: s in self.inverse and (True if filter is None else filter(s))
         Filtration.__init__(self, codomain.complex, codomain.key, reverse, filt)
-    def __call__(self, s, *args, **kwargs):
+    def __call__(self, s):
         return s if self.map is None else self.map[s]
-    def sort_faces(self, i, *args, **kwargs):
+    def get_column(self, i, coh=False):
         if self.dual:
-            return sorted([self.domain.index(self(f)) for f in self.complex.cofaces(self[i])])
-        return sorted([self.domain.index(self(f)) for f in self.complex.faces(self[i])])
-    def sort_cofaces(self, i, *args, **kwargs):
-        if self.dual:
-            return sorted([self.domain.index(self(f)) for f in self.complex.faces(self[i])], reverse=True)
-        return sorted([self.domain.index(self(f)) for f in self.complex.cofaces(self[i])], reverse=True)
+            return self.complex.faces(self[i]) if coh else self.complex.cofaces(self[i])
+        return Filtration.get_column(self, i, coh)
+    def sort_column(self, i, coh=False):
+        return sorted([self.domain.index(self.inverse[f]) for f in self.get_column(i, coh)], reverse=coh)
+    def get_birth(self, i=None):
+        return -np.inf if i is None else self.domain[i](self.domain.key)
+    def get_dim(self, i):
+        return self.domain[i].dim

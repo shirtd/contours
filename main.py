@@ -19,6 +19,10 @@ if __name__ == '__main__':
     # RUN main.py data/surf/samples/surf8-sample322-111.csv --rips --barcode --show
     # --noim works
 
+    # args.rips = True
+    # args.barcode = True
+    # args.show = True
+
     sample = MetricSampleFile(args.file)
     args.set_args(sample)
 

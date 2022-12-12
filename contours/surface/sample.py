@@ -76,12 +76,11 @@ class MetricSampleData(MetricSample, Data):
     def get_barcode(self, complex, smooth=True, key='sub', pivot_key=None):
         pivot_key = key if pivot_key is None else pivot_key
         filt = Filtration(complex, key)
-        pivot = filt
         if complex.thresh > self.radius:
-            pivot = Filtration(complex, pivot_key, filter=lambda s: s.data['dist'] <= self.radius)
+            pivot = Filtration(complex, pivot_key, filter=lambda s: s('dist') <= 2*self.radius)
             filt = ImageFiltration(pivot, filt)
-        hom =  Barcode(filt, pivot, verbose=True)
-        return hom.get_barcode(filt, pivot, smoothing=self.smooth if smooth else None)
+        hom = Barcode(filt, verbose=True)
+        return hom.get_barcode(filt, smoothing=self.smooth if smooth else None)
 
 class MetricSampleFile(MetricSampleData, DataFile):
     def __init__(self, file_name, json_file=None, radius=None):
