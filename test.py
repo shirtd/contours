@@ -47,8 +47,7 @@ if __name__ == '__main__':
     pivot = Filtration(delaunay, 'max')
     map = {s : voronoi.dual(s) for s in delaunay}
     imfilt = ImageFiltration(pivot, filt, map, True)
-    hom =  Barcode(imfilt)
-    barcode = hom.get_barcode(imfilt)
+    barcode =  Barcode(imfilt)
 
     fig, ax = init_barcode()
     barcode_plt = plot_barcode(ax, barcode[1], sample.cuts, sample.colors, **KWARGS['barcode'])

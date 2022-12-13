@@ -13,16 +13,6 @@ from contours.program import RunSample
 if __name__ == '__main__':
     args = RunSample(parser)
 
-    # RIPS IMAGE IS BROKEN;
-    # EMPTY BARCODE
-    # SEE ImageFiltration;
-    # RUN main.py data/surf/samples/surf8-sample322-111.csv --rips --barcode --show
-    # --noim works
-
-    # args.rips = True
-    # args.barcode = True
-    # args.show = True
-
     sample = MetricSampleFile(args.file)
     args.set_args(sample)
 

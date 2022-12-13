@@ -79,8 +79,7 @@ class MetricSampleData(MetricSample, Data):
         if complex.thresh > self.radius:
             pivot = Filtration(complex, pivot_key, filter=lambda s: s('dist') <= 2*self.radius)
             filt = ImageFiltration(pivot, filt)
-        hom = Barcode(filt, verbose=True)
-        return hom.get_barcode(filt, smoothing=self.smooth if smooth else None)
+        return Barcode(filt, self.smooth if smooth else None, verbose=True)
 
 class MetricSampleFile(MetricSampleData, DataFile):
     def __init__(self, file_name, json_file=None, radius=None):

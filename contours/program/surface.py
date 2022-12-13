@@ -7,6 +7,7 @@ from contours.config import KWARGS, GAUSS_ARGS
 from contours.plot import init_barcode, plot_barcode
 from contours.surface import USGSScalarFieldData, GaussianScalarFieldData, ScalarFieldFile
 from contours.surface.sample import MetricSampleFile
+from ..util import lmap, format_float
 
 
 class RunSurface:
@@ -69,7 +70,7 @@ class RunSurface:
             if self.show:
                 plt.pause(0.5)
             if self.save:
-                self.save_plot(self.folder, self.dpi, format_float(t))
+                surf.save_plot(self.folder, self.dpi, format_float(t))
         plt.close(fig)
     def plot_surface(self, surf):
         fig, ax = surf.init_plot()
